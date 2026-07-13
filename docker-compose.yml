@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Database Service
+  mongodb:
+    image: mongo:6.0
+    container_name: crm_mongodb
+    restart: always
+    volumes:
+      - crm_db_data:/data/db
+    # Notice: Port 27017 is NOT exposed to the host machine for strict security.
+    # It is only accessible to the backend service internally inside the Docker network.
+    environment:
+      - MONGO_INITDB_DATABASE=pangaea_crm
+
+  # 2. FastAPI Backend Service
+  backend:
+    build: ./server
+    container_name: crm_backend
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - ENV=production
+      - DATABASE_URL=mongodb://mongodb:27017/pangaea_crm
+      - SESSION_SECRET=${SESSION_SECRET}
+      - CEO_EMAIL=${CEO_EMAIL}
+      - CEO_PASSWORD=${CEO_PASSWORD}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+
+  # 3. Nginx + React Frontend Service
+  frontend:
+    build: ./client
+    container_name: crm_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  crm_db_data:

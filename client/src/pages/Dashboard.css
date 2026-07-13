@@ -1,0 +1,666 @@
+/* client/src/pages/Dashboard.css */
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ─── Redesigned Welcomer Card ────────────────────────────────────────── */
+.dashboard-welcome-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0369a1 50%, #1e1b4b 100%);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  padding: 1.5rem;
+  color: #ffffff;
+}
+
+.dashboard-welcome-bg-glow-1 {
+  position: absolute;
+  right: -2.5rem;
+  top: -2.5rem;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  background-color: rgba(33, 51, 74, 0.2);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.dashboard-welcome-bg-glow-2 {
+  position: absolute;
+  left: -2.5rem;
+  bottom: -2.5rem;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  background-color: rgba(99, 102, 241, 0.2);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.dashboard-welcome-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .dashboard-welcome-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.dashboard-welcome-text-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-welcome-session-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #bae6fd;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  width: fit-content;
+}
+
+.dashboard-welcome-session-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #34d399;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.dashboard-welcome-title {
+  font-size: 1.875rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  margin: 0.25rem 0 0 0;
+}
+
+.dashboard-welcome-subtitle {
+  color: #e0f2fe;
+  font-size: 0.875rem;
+  max-w: 32rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.dashboard-welcome-stats-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dashboard-welcome-stat-pill {
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-w: 140px;
+}
+
+.dashboard-welcome-stat-pill-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #7dd3fc;
+  display: block;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.dashboard-welcome-stat-pill-val {
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+}
+
+/* ─── 4-Column Stat Cards Grid ────────────────────────────────────────── */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-stat-card {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-stat-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  transform: translateY(-2px);
+}
+
+/* Color themed borders and cards */
+.dashboard-stat-card.new-enquiries {
+  border-top: 4px solid #0ea5e9;
+}
+.dashboard-stat-card.new-enquiries:hover {
+  border-color: #7dd3fc;
+}
+
+.dashboard-stat-card.active-cases {
+  border-top: 4px solid #6366f1;
+}
+.dashboard-stat-card.active-cases:hover {
+  border-color: #a5b4fc;
+}
+
+.dashboard-stat-card.conversion {
+  border-top: 4px solid #10b981;
+}
+.dashboard-stat-card.conversion:hover {
+  border-color: #6ee7b7;
+}
+
+.dashboard-stat-card.on-hold {
+  border-top: 4px solid #f59e0b;
+}
+.dashboard-stat-card.on-hold:hover {
+  border-color: #fcd34d;
+}
+
+.dashboard-stat-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dashboard-stat-card-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.dashboard-stat-card-val {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+}
+
+.dashboard-stat-card-icon-container {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.dashboard-stat-card.new-enquiries .dashboard-stat-card-icon-container {
+  background-color: #f0f9ff;
+  color: #0284c7;
+}
+.dashboard-stat-card.new-enquiries:hover .dashboard-stat-card-icon-container {
+  background-color: #0ea5e9;
+  color: #ffffff;
+}
+
+.dashboard-stat-card.active-cases .dashboard-stat-card-icon-container {
+  background-color: #eef2ff;
+  color: #4f46e5;
+}
+.dashboard-stat-card.active-cases:hover .dashboard-stat-card-icon-container {
+  background-color: #6366f1;
+  color: #ffffff;
+}
+
+.dashboard-stat-card.conversion .dashboard-stat-card-icon-container {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+.dashboard-stat-card.conversion:hover .dashboard-stat-card-icon-container {
+  background-color: #10b981;
+  color: #ffffff;
+}
+
+.dashboard-stat-card.on-hold .dashboard-stat-card-icon-container {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+.dashboard-stat-card.on-hold:hover .dashboard-stat-card-icon-container {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.dashboard-stat-card-link {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dashboard-stat-card.new-enquiries .dashboard-stat-card-link { color: #0284c7; }
+.dashboard-stat-card.active-cases .dashboard-stat-card-link { color: #4f46e5; }
+.dashboard-stat-card.conversion .dashboard-stat-card-link { color: #059669; }
+.dashboard-stat-card.on-hold .dashboard-stat-card-link { color: #d97706; }
+
+.dashboard-stat-card-arrow {
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-left: 0.25rem;
+  transition: transform 0.3s ease;
+}
+
+.dashboard-stat-card:hover .dashboard-stat-card-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* ─── Split Grid Layout ────────────────────────────────────────────────── */
+.dashboard-split-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-split-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left Area (Tasks Widget) */
+.dashboard-tasks-container {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboard-tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-tasks-header-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.dashboard-tasks-header-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.125rem;
+  font-weight: 500;
+}
+
+.dashboard-tasks-header-btn {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0369a1;
+  border: 1px solid #e0f2fe;
+  background-color: rgba(240, 249, 255, 0.5);
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dashboard-tasks-header-btn:hover {
+  background-color: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.dashboard-tasks-empty-card {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  background-color: rgba(248, 250, 252, 0.5);
+  border: 1px dashed #e2e8f0;
+  border-radius: 0.75rem;
+}
+
+.dashboard-tasks-empty-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #cbd5e1;
+  margin: 0 auto 0.5rem auto;
+}
+
+.dashboard-tasks-empty-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+}
+
+.dashboard-tasks-empty-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.125rem;
+}
+
+.dashboard-tasks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-tasks-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.dashboard-tasks-item.completed {
+  background-color: rgba(248, 250, 252, 0.5);
+  border-color: #f1f5f9;
+  opacity: 0.6;
+}
+
+.dashboard-tasks-item.pending {
+  background-color: #ffffff;
+  border-color: #f1f5f9;
+}
+
+.dashboard-tasks-item.pending:hover {
+  border-color: #e0f2fe;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.dashboard-tasks-item-btn {
+  margin-right: 0.875rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dashboard-tasks-item-btn:focus {
+  outline: none;
+}
+
+.dashboard-tasks-item-title {
+  font-size: 0.875rem;
+}
+
+.dashboard-tasks-item-title.completed {
+  text-decoration: line-through;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.dashboard-tasks-item-title.pending {
+  color: #334155;
+  font-weight: 600;
+}
+
+.dashboard-tasks-footer {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.dashboard-tasks-footer-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.dashboard-tasks-footer-btn:hover {
+  color: #1e293b;
+  text-decoration: underline;
+}
+
+/* Right Area (Shortcuts & Activity Summary) */
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-shortcuts-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+}
+
+.dashboard-shortcuts-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+  margin-top: 0;
+}
+
+.dashboard-shortcuts-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.dashboard-shortcut-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dashboard-shortcut-btn.new-lead {
+  background: linear-gradient(to right, #f0f9ff 0%, rgba(240, 249, 255, 0.2) 100%);
+  border-color: rgba(224, 242, 254, 0.4);
+}
+.dashboard-shortcut-btn.new-lead:hover {
+  background: linear-gradient(to right, #f0f9ff 0%, rgba(224, 242, 254, 0.5) 100%);
+}
+
+.dashboard-shortcut-btn.leads-dir {
+  background: linear-gradient(to right, rgba(238, 242, 255, 0.5) 0%, rgba(238, 242, 255, 0.1) 100%);
+  border-color: rgba(228, 230, 255, 0.3);
+}
+.dashboard-shortcut-btn.leads-dir:hover {
+  background: linear-gradient(to right, rgba(238, 242, 255, 1) 0%, rgba(228, 230, 255, 0.3) 100%);
+}
+
+.dashboard-shortcut-btn.immigration {
+  background: linear-gradient(to right, rgba(236, 253, 245, 0.5) 0%, rgba(236, 253, 245, 0.1) 100%);
+  border-color: rgba(209, 250, 229, 0.3);
+}
+.dashboard-shortcut-btn.immigration:hover {
+  background: linear-gradient(to right, rgba(236, 253, 245, 1) 0%, rgba(209, 250, 229, 0.3) 100%);
+}
+
+.dashboard-shortcut-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dashboard-shortcut-plus {
+  padding: 0.5rem;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  color: #0284c7;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(224, 242, 254, 0.2);
+  font-weight: 700;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.dashboard-shortcut-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.dashboard-shortcut-label.new-lead { color: #0c4a6e; }
+.dashboard-shortcut-label.leads-dir { color: #1e1b4b; }
+.dashboard-shortcut-label.immigration { color: #064e3b; }
+
+.dashboard-shortcut-arrow {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.dashboard-shortcut-btn:hover .dashboard-shortcut-arrow {
+  transform: translateX(4px);
+}
+
+.dashboard-shortcut-arrow.new-lead { color: #0284c7; }
+.dashboard-shortcut-arrow.leads-dir { color: #6366f1; }
+.dashboard-shortcut-arrow.immigration { color: #10b981; }
+
+.dashboard-shortcut-icon {
+  width: 1rem;
+  height: 1rem;
+}
+.dashboard-shortcut-icon.leads-dir { color: #6366f1; }
+.dashboard-shortcut-icon.immigration { color: #10b981; }
+
+/* System Status Details */
+.dashboard-status-card {
+  background-color: #f8fafc;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-status-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-status-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6366f1;
+}
+
+.dashboard-status-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.dashboard-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.dashboard-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.375rem 0;
+}
+
+.dashboard-status-item.border-b {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dashboard-status-val {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.dashboard-status-role-badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.625rem;
+}
+
+.dashboard-status-scope {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}

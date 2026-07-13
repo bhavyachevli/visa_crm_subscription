@@ -1,0 +1,43 @@
+# Node dependencies
+node_modules/
+client/node_modules/
+dist/
+client/dist/
+
+# Environment configurations
+.env
+client/.env
+server/.env
+.env.*
+client/.env.*
+server/.env.*
+
+# Python Cache & Virtual Environments
+__pycache__/
+server/__pycache__/
+middleware/__pycache__/
+models/__pycache__/
+routes/__pycache__/
+utils/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.venv/
+server/.venv/
+venv/
+env/
+
+# Databases & local files
+**/*.db
+**/*.sqlite3
+latest_otp.txt
+server/latest_otp.txt
+server/db_debug.txt
+lead_debug.txt
+temp_git_diff.txt
+
+# IDEs & System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

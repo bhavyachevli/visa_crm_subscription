@@ -1,0 +1,209 @@
+{
+  "branches": [
+    {
+      "_id": {
+        "$oid": "6a0420e2c32cb0b4dfb5607f"
+      },
+      "name": "Australia"
+    },
+    {
+      "_id": {
+        "$oid": "6a0420e2c32cb0b4dfb56080"
+      },
+      "name": "Surat",
+      "country": "India"
+    },
+    {
+      "_id": {
+        "$oid": "6a0420e2c32cb0b4dfb56081"
+      },
+      "name": "Ahmedabad",
+      "country": "India"
+    },
+    {
+      "_id": {
+        "$oid": "6a06b3eb891130c8a9bd4f5c"
+      },
+      "name": "Australia HQ",
+      "city": "Sydney",
+      "country": "Australia"
+    },
+    {
+      "_id": {
+        "$oid": "6a06b3eb891130c8a9bd4f5d"
+      },
+      "name": "Melbourne",
+      "city": "Melbourne",
+      "country": "Australia"
+    },
+    {
+      "_id": {
+        "$oid": "6a06b3eb891130c8a9bd4f5e"
+      },
+      "name": "Mumbai",
+      "city": "Mumbai",
+      "country": "India"
+    },
+    {
+      "_id": {
+        "$oid": "6a06b3eb891130c8a9bd4f5f"
+      },
+      "name": "Canada Office",
+      "city": "Toronto",
+      "country": "Canada"
+    },
+    {
+      "_id": {
+        "$oid": "6a06b3eb891130c8a9bd4f60"
+      },
+      "name": "UK Office",
+      "city": "London",
+      "country": "United Kingdom"
+    }
+  ],
+  "users": [
+    {
+      "_id": {
+        "$oid": "6a0411a0a142a6046be20615"
+      },
+      "name": "Bhavya Admin",
+      "email": "admin@pangaea.com",
+      "role": "ADMIN",
+      "branchId": null,
+      "emailVerifiedAt": {
+        "$date": "2026-05-13T05:52:32.650Z"
+      },
+      "totpEnabled": false,
+      "createdAt": {
+        "$date": "2026-05-13T05:52:32.650Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a06b3eb891130c8a9bd4f61"
+      },
+      "email": "ceo@pangaea.com",
+      "name": "Pangaea CEO",
+      "googleId": null,
+      "role": "CEO",
+      "country": null,
+      "branchId": null,
+      "createdBy": null,
+      "isActive": true,
+      "emailVerifiedAt": {
+        "$date": "2026-05-15T05:49:31.320Z"
+      },
+      "totpEnabled": false,
+      "createdAt": {
+        "$date": "2026-05-15T05:49:31.320Z"
+      },
+      "updatedAt": {
+        "$date": "2026-05-15T05:49:31.320Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a06b9fb93d44b507362a54a"
+      },
+      "email": "director12@gmail.com",
+      "name": "sarah jenson",
+      "googleId": null,
+      "role": "DIRECTOR",
+      "country": "Australia",
+      "branchId": null,
+      "createdBy": {
+        "$oid": "6a06b3eb891130c8a9bd4f61"
+      },
+      "emailVerifiedAt": {
+        "$date": "2026-05-15T06:15:23.044Z"
+      },
+      "isActive": true,
+      "totpEnabled": false,
+      "createdAt": {
+        "$date": "2026-05-15T06:15:23.044Z"
+      },
+      "updatedAt": {
+        "$date": "2026-05-15T06:15:23.044Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a07f6cbc60bf82a5fe04f13"
+      },
+      "email": "bhavyachevli967@gmail.com",
+      "name": "Bhavya Chevli",
+      "googleId": "111333352236371894519",
+      "role": "DIRECTOR",
+      "country": "India",
+      "branchId": null,
+      "createdBy": {
+        "$oid": "6a06b3eb891130c8a9bd4f61"
+      },
+      "emailVerifiedAt": {
+        "$date": "2026-05-16T04:47:07.061Z"
+      },
+      "isActive": true,
+      "totpEnabled": false,
+      "createdAt": {
+        "$date": "2026-05-16T04:47:07.061Z"
+      },
+      "updatedAt": {
+        "$date": "2026-05-16T04:47:07.061Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a0ff34479393f3e21309b56"
+      },
+      "email": "vanshree@pangaeapathways.com",
+      "name": "vanshree",
+      "googleId": null,
+      "role": "BRANCH_ADMIN",
+      "country": "India",
+      "branchId": {
+        "$oid": "6a0420e2c32cb0b4dfb56081"
+      },
+      "createdBy": {
+        "$oid": "6a07f6cbc60bf82a5fe04f13"
+      },
+      "emailVerifiedAt": {
+        "$date": "2026-05-22T06:10:12.327Z"
+      },
+      "isActive": true,
+      "totpEnabled": false,
+      "createdAt": {
+        "$date": "2026-05-22T06:10:12.327Z"
+      },
+      "updatedAt": {
+        "$date": "2026-05-22T06:10:12.327Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6a1029dcbf595e70507fc7fc"
+      },
+      "email": "jatan@pangaea.com",
+      "name": "jatan",
+      "googleId": null,
+      "role": "BRANCH_ADMIN",
+      "country": "India",
+      "branchId": {
+        "$oid": "6a06b3eb891130c8a9bd4f5e"
+      },
+      "createdBy": {
+        "$oid": "6a07f6cbc60bf82a5fe04f13"
+      },
+      "emailVerifiedAt": {
+        "$date": "2026-05-22T10:03:08.229Z"
+      },
+      "isActive": true,
+      "totpEnabled": false,
+      "createdAt": {
+        "$date": "2026-05-22T10:03:08.229Z"
+      },
+      "updatedAt": {
+        "$date": "2026-05-22T10:03:08.229Z"
+      }
+    }
+  ]
+}

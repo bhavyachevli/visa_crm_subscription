@@ -1,0 +1,301 @@
+/* client/src/pages/ManageBranchAdmins.css */
+
+.manage-admins-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.manage-admins-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.manage-admins-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.manage-admins-subtitle {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.manage-admins-action-msg {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #166534;
+  font-size: 0.875rem;
+}
+
+.manage-admins-loading {
+  text-align: center;
+  padding: 3rem;
+  color: #94a3b8;
+}
+
+.manage-admins-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #94a3b8;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.manage-admins-empty-icon {
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+.manage-admins-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.manage-admins-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.manage-admins-card.inactive {
+  opacity: 0.6;
+}
+
+.manage-admins-card-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.manage-admins-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.manage-admins-info-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.manage-admins-info-email {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.manage-admins-info-badges {
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.manage-admins-badge-branch {
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.manage-admins-badge-country {
+  background: #fafafa;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.manage-admins-info-google {
+  color: #0ea5e9;
+  font-weight: 500;
+}
+
+.manage-admins-card-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.manage-admins-status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.manage-admins-status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.manage-admins-status-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.manage-admins-action-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+/* Responsiveness 395px - 1300px */
+@media (max-width: 600px) {
+  .manage-admins-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .manage-admins-card-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Filters Area */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: white;
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1 1 200px;
+}
+
+.filter-group.search-group {
+  flex: 2 1 300px;
+}
+
+.filter-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #0f172a;
+  outline: none;
+  background-color: white;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  font-family: inherit;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.filter-input::placeholder {
+  color: #94a3b8;
+}
+
+/* ─── Delete button ──────────────────────────────────────────────────── */
+.manage-admins-action-btn.delete-btn {
+  color: #94a3b8;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.manage-admins-action-btn.delete-btn:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fca5a5;
+}
+
+.manage-admins-delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.manage-admins-confirm-yes {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.manage-admins-confirm-yes:hover { opacity: 0.85; }
+
+.manage-admins-confirm-no {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ─── Alert color variants ───────────────────────────────────────────── */
+.manage-admins-action-msg.success {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.manage-admins-action-msg.error {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
