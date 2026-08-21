@@ -89,7 +89,7 @@ export default function ManageBranches() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.country || !form.city) {
+    if (!form.name.trim() || !form.country || !form.city.trim()) {
       setActionMsg({ type: 'error', text: 'Branch name, country, and city are all required.' });
       return;
     }
@@ -105,7 +105,7 @@ export default function ManageBranches() {
       await axios.post('/api/meta/branches', {
         name: form.name.trim(),
         country: form.country,
-        city: form.city,
+        city: form.city.trim(),
         area: form.area.trim() || undefined,
       }, { withCredentials: true });
       setActionMsg({ type: 'success', text: `✅ Branch "${form.name}" added successfully in ${form.city}, ${form.country}!` });
@@ -115,12 +115,11 @@ export default function ManageBranches() {
       setShowForm(false);
       fetchBranches();
     } catch (err) {
+      console.error('Branch creation failed:', err);
       setActionMsg({ type: 'error', text: err.response?.data?.detail || 'Failed to add branch.' });
     } finally {
       setSubmitting(false);
     }
-
-    setTimeout(() => setActionMsg({ type: '', text: '' }), 5000);
   };
 
   const handleDelete = async (branchId) => {
@@ -184,8 +183,17 @@ export default function ManageBranches() {
       {/* Alert */}
       {actionMsg.text && (
         <div className={`mb-alert ${actionMsg.type}`}>
-          {actionMsg.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-          {actionMsg.text}
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1 }}>
+            {actionMsg.type === 'success' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+            {actionMsg.text}
+          </span>
+          <button
+            onClick={() => setActionMsg({ type: '', text: '' })}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.25rem', color: 'inherit', fontSize: '1.1rem', lineHeight: 1 }}
+            title="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -247,16 +255,20 @@ export default function ManageBranches() {
               {/* City */}
               <div className="mb-field">
                 <label className="mb-label"><MapPin size={13} /> City <span style={{ color: 'red' }}>*</span></label>
-                <select
+                <input
+                  type="text"
                   className="mb-input"
+                  placeholder={loadingCities ? 'Loading cities...' : 'Type or select a city'}
                   value={form.city}
                   onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
-                  disabled={!form.state || loadingCities}
+                  list="city-suggestions"
                   required
-                >
-                  <option value="">{loadingCities ? 'Loading...' : '— Select City —'}</option>
-                  {citiesList.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                />
+                {citiesList.length > 0 && (
+                  <datalist id="city-suggestions">
+                    {citiesList.map(c => <option key={c} value={c} />)}
+                  </datalist>
+                )}
               </div>
             </div>
 

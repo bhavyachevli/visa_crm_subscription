@@ -1,5 +1,5 @@
 """
-Auth routes: login, Google OAuth, hierarchical account creation, MFA, logout.
+Auth routes: login, Google OAuth, hierarchical account creation, MFA, logout, tenant registration.
 
 Role hierarchy:
   CEO → creates → DIRECTOR (assigns country)
@@ -11,15 +11,16 @@ from bson import ObjectId
 import os
 from datetime import datetime, timezone
 import pyotp
+import random
 
-from utils.db import db
+from utils.db import db, coordinator_db, db_context, client
 from utils.auth_utils import hash_password, verify_password, create_access_token, generate_totp_secret, decode_access_token
 from utils.google_auth import verify_google_token
-import random
 from models.schemas import (
     UserCreate, UserLogin, VerifyMfa, VerifyEnableMfa,
     CreateUserByAdmin, GoogleAuthRequest,
-    ForgotPasswordRequest, VerifyForgotPasswordOTP, ResetPasswordRequest
+    ForgotPasswordRequest, VerifyForgotPasswordOTP, ResetPasswordRequest,
+    TenantRegister
 )
 from middleware.auth import get_current_user
 from utils.rate_limiter import limiter
@@ -38,41 +39,158 @@ def _serialize_user(user: dict) -> dict:
         "country": user.get("country"),
         "branchId": str(user["branchId"]) if user.get("branchId") else None,
         "tokenVersion": user.get("tokenVersion", 1),
+        "db_name": user.get("db_name") or db_context.get().name,
+        "tenant_id": str(user.get("tenant_id")) if user.get("tenant_id") else None,
     }
 
-import os as _os
-_IS_PRODUCTION = _os.environ.get("ENV", "development") == "production"
+_IS_PRODUCTION = os.environ.get("ENV", "development") == "production"
 
 def create_session(user: dict, response: Response):
     """Create JWT session cookie and return user info."""
     payload = _serialize_user(user)
     token = create_access_token(payload)
     response.set_cookie(
-        key="pangaea_session",
+        key="nexus_session",
         value=token,
         httponly=True,
         max_age=7 * 24 * 3600,
         samesite="lax",
-        secure=_IS_PRODUCTION,  # True in production, False in development
+        secure=_IS_PRODUCTION,
     )
     return {"ok": True, "role": user["role"], "country": user.get("country")}
+
+# ─── Tenant Public Registration ───────────────────────────────────────────────
+
+@router.post("/register-tenant")
+def register_tenant(req: TenantRegister):
+    """
+    Public endpoint for new companies to subscribe.
+    Creates coordinator tenant metadata, global user lookup, and seeds the tenant database with CEO.
+    """
+    # Normalize email
+    email_clean = req.email.strip().lower()
+    
+    if coordinator_db.users.find_one({"email": email_clean}):
+        raise HTTPException(status_code=400, detail="Email is already registered")
+
+    # Map planId to seatsLimit and profilesLimit
+    plan_id = req.planId.strip().lower() if req.planId else "starter"
+    if plan_id not in ("starter", "growth", "agency"):
+        plan_id = "starter"
+        
+    seats_limit = 1
+    profiles_limit = 100
+    
+    if plan_id == "growth":
+        seats_limit = 5
+        profiles_limit = 500
+    elif plan_id == "agency":
+        seats_limit = 999999
+        profiles_limit = 999999
+
+    # 1. Create Tenant metadata in coordinator
+    tenant_id = ObjectId()
+    db_name = f"nexus_tenant_{str(tenant_id)}"
+    
+    tenant_doc = {
+        "_id": tenant_id,
+        "company_name": req.companyName.strip(),
+        "owner_email": email_clean,
+        "db_name": db_name,
+        "subscription_status": "inactive",  # Starts inactive, requires payment checkout
+        "planId": plan_id,
+        "seatsLimit": seats_limit,
+        "profilesLimit": profiles_limit,
+        "stripe_customer_id": None,
+        "stripe_subscription_id": None,
+        "createdAt": datetime.now(timezone.utc)
+    }
+    coordinator_db.tenants.insert_one(tenant_doc)
+
+    pwd_hash = hash_password(req.password)
+
+    # 2. Create User mapping globally in coordinator for login routing
+    coordinator_db.users.insert_one({
+        "email": email_clean,
+        "passwordHash": pwd_hash,
+        "role": "CEO",
+        "tenant_id": tenant_id,
+        "db_name": db_name,
+        "googleId": None
+    })
+
+    # 3. Seed the tenant database
+    token_token = db_context.set(client[db_name])
+    try:
+        # Create default CEO user
+        db.users.insert_one({
+            "email": email_clean,
+            "name": req.name.strip(),
+            "passwordHash": pwd_hash,
+            "googleId": None,
+            "role": "CEO",
+            "country": None,
+            "branchId": None,
+            "createdBy": None,
+            "isActive": True,
+            "emailVerifiedAt": datetime.now(timezone.utc),
+            "totpEnabled": False,
+            "totpSecret": None,
+            "tenant_id": tenant_id,
+            "createdAt": datetime.now(timezone.utc),
+            "updatedAt": datetime.now(timezone.utc),
+        })
+
+        # Seed initial default branch
+        db.branches.insert_one({
+            "name": "Main Office",
+            "city": "HQ",
+            "country": "India"
+        })
+    finally:
+        db_context.reset(token_token)
+
+    return {
+        "success": True,
+        "message": "Tenant registered successfully. Please proceed to payment.",
+        "tenantId": str(tenant_id),
+        "email": email_clean
+    }
 
 # ─── Standard Email/Password Login ────────────────────────────────────────────
 
 @router.post("/login")
 def login(creds: UserLogin, response: Response, _rl=Depends(limiter.limit(5, 60))):
-    user = db.users.find_one({"email": creds.email})
-    if not user or not verify_password(creds.password, user.get("passwordHash", "")):
+    email_clean = creds.email.strip().lower()
+    
+    # 1. Look up globally in coordinator
+    coord_user = coordinator_db.users.find_one({"email": email_clean})
+    if not coord_user or not verify_password(creds.password, coord_user.get("passwordHash", "")):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    if not user.get("isActive", True):
-        raise HTTPException(status_code=403, detail="Account has been deactivated")
+    db_name = coord_user.get("db_name")
+    if not db_name:
+        raise HTTPException(status_code=400, detail="Invalid user tenant configuration")
 
-    if user.get("totpEnabled"):
-        response.set_cookie(key="pangaea_mfa_pending", value=str(user["_id"]), httponly=True, max_age=600)
-        return {"needsMfa": True}
+    # 2. Switch context to the tenant database to load full profile
+    token_token = db_context.set(client[db_name])
+    try:
+        user = db.users.find_one({"email": email_clean})
+        if not user:
+            raise HTTPException(status_code=404, detail="User profile not found in tenant database")
+            
+        if not user.get("isActive", True):
+            raise HTTPException(status_code=403, detail="Account has been deactivated")
 
-    return create_session(user, response)
+        if user.get("totpEnabled"):
+            response.set_cookie(key="nexus_mfa_pending", value=str(user["_id"]), httponly=True, max_age=600)
+            return {"needsMfa": True}
+
+        # Keep tenant_id on user mapping
+        user["tenant_id"] = coord_user.get("tenant_id")
+        return create_session(user, response)
+    finally:
+        db_context.reset(token_token)
 
 # ─── Google OAuth: Sign In ─────────────────────────────────────────────────
 
@@ -80,35 +198,59 @@ def login(creds: UserLogin, response: Response, _rl=Depends(limiter.limit(5, 60)
 def google_login(req: GoogleAuthRequest, response: Response, _rl=Depends(limiter.limit(5, 60))):
     """
     User signs in with Google. Verifies the ID token server-side,
-    finds the user by googleId or email, creates a session.
+    finds the user globally, switches database, then creates session.
     """
     try:
         google_data = verify_google_token(req.credential)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
 
-    # Find user by googleId first, then fallback to email
-    user = db.users.find_one({"googleId": google_data["googleId"]})
-    if not user:
-        user = db.users.find_one({"email": google_data["email"]})
-        if user:
-            # Link existing account to Google
+    email_clean = google_data["email"].strip().lower()
+
+    # Look up globally in coordinator
+    coord_user = coordinator_db.users.find_one({
+        "$or": [
+            {"googleId": google_data["googleId"]},
+            {"email": email_clean}
+        ]
+    })
+    
+    if not coord_user:
+        raise HTTPException(
+            status_code=404,
+            detail="No account found. Please register or ask your administrator to create your account."
+        )
+
+    db_name = coord_user.get("db_name")
+    if not db_name:
+        raise HTTPException(status_code=400, detail="Invalid user tenant configuration")
+
+    # Switch database context
+    token_token = db_context.set(client[db_name])
+    try:
+        user = db.users.find_one({"email": email_clean})
+        if not user:
+            raise HTTPException(status_code=404, detail="User profile not found in tenant database")
+
+        # Link googleId if missing
+        if not user.get("googleId") or not coord_user.get("googleId"):
             db.users.update_one(
                 {"_id": user["_id"]},
                 {"$set": {"googleId": google_data["googleId"], "emailVerifiedAt": datetime.now(timezone.utc)}}
             )
+            coordinator_db.users.update_one(
+                {"_id": coord_user["_id"]},
+                {"$set": {"googleId": google_data["googleId"]}}
+            )
             user = db.users.find_one({"_id": user["_id"]})
 
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="No account found. Please ask your CEO or Director to create your account."
-        )
+        if not user.get("isActive", True):
+            raise HTTPException(status_code=403, detail="Account has been deactivated")
 
-    if not user.get("isActive", True):
-        raise HTTPException(status_code=403, detail="Account has been deactivated")
-
-    return create_session(user, response)
+        user["tenant_id"] = coord_user.get("tenant_id")
+        return create_session(user, response)
+    finally:
+        db_context.reset(token_token)
 
 # ─── Google OAuth: Create Account (hierarchical) ───────────────────────────
 
@@ -119,9 +261,8 @@ def google_create_account(
     current_user=Depends(get_current_user)
 ):
     """
-    Authenticated users create a new account for someone else using their Google account.
-    CEO → creates DIRECTOR, DIRECTOR → creates BRANCH_ADMIN.
-    The NEW user signs in with Google, and their Google credential is sent here.
+    Authenticated users create a new account for someone else using Google.
+    Admin also updates coordinator global users table.
     """
     if current_user["role"] in ("BRANCH_ADMIN", "ADMIN"):
         raise HTTPException(status_code=403, detail="Branch Admins cannot create accounts")
@@ -130,6 +271,8 @@ def google_create_account(
         google_data = verify_google_token(req.credential)
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+    email_clean = google_data["email"].strip().lower()
 
     # Validate role hierarchy
     if req.role == "DIRECTOR":
@@ -148,7 +291,6 @@ def google_create_account(
             raise HTTPException(status_code=403, detail="Only Directors can create Branch Admin accounts")
         if not req.branchId:
             raise HTTPException(status_code=400, detail="Branch is required for Branch Admin accounts")
-        # Validate branch belongs to Director's country
         branch = db.branches.find_one({"_id": ObjectId(req.branchId)})
         if not branch:
             raise HTTPException(status_code=404, detail="Branch not found")
@@ -161,7 +303,6 @@ def google_create_account(
         if current_user["role"] not in ("CEO", "DIRECTOR"):
             raise HTTPException(status_code=403, detail="Only CEO or Directors can create HR accounts")
         
-        # Scope assignment
         if current_user["role"] == "CEO":
             country = req.country or None
             branch_id = ObjectId(req.branchId) if req.branchId else None
@@ -174,7 +315,6 @@ def google_create_account(
                 if not country:
                     country = branch.get("country")
         else:
-            # Director is creating: country is auto-assigned
             country = current_user.get("country")
             branch_id = ObjectId(req.branchId) if req.branchId else None
             if branch_id:
@@ -184,15 +324,30 @@ def google_create_account(
                 if branch.get("country") != current_user.get("country"):
                     raise HTTPException(status_code=403, detail="Cannot assign HR to branch outside your country")
     else:
-        raise HTTPException(status_code=400, detail="Invalid role. Must be DIRECTOR, BRANCH_ADMIN, ADMIN, or HR")
+        raise HTTPException(status_code=400, detail="Invalid role")
 
+    # Check coordinator globally first
+    if coordinator_db.users.find_one({"email": email_clean}):
+        raise HTTPException(status_code=400, detail="This email is already registered")
 
-    # Check not already registered
-    if db.users.find_one({"$or": [{"email": google_data["email"]}, {"googleId": google_data["googleId"]}]}):
-        raise HTTPException(status_code=400, detail="This Google account is already registered")
+    tenant_id_str = current_user.get("tenant_id")
+    tenant_id = ObjectId(tenant_id_str) if tenant_id_str else None
 
+    # Check seats limit
+    if tenant_id_str:
+        tenant = coordinator_db.tenants.find_one({"_id": ObjectId(tenant_id_str)})
+        if tenant:
+            seats_limit = tenant.get("seatsLimit", 1)
+            current_seats = db.users.count_documents({})
+            if current_seats >= seats_limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Upgrade required. Your plan allows up to {seats_limit} team seat(s)."
+                )
+
+    # Insert in tenant database
     new_user = {
-        "email": google_data["email"],
+        "email": email_clean,
         "name": google_data["name"],
         "googleId": google_data["googleId"],
         "passwordHash": None,
@@ -207,12 +362,24 @@ def google_create_account(
         "isActive": True,
         "totpEnabled": False,
         "totpSecret": None,
+        "tenant_id": tenant_id,
         "createdAt": datetime.now(timezone.utc),
         "updatedAt": datetime.now(timezone.utc),
     }
 
     result = db.users.insert_one(new_user)
     new_user["_id"] = result.inserted_id
+
+    # Insert globally in coordinator mapping
+    coordinator_db.users.insert_one({
+        "email": email_clean,
+        "passwordHash": None,
+        "role": req.role,
+        "tenant_id": tenant_id,
+        "db_name": db_context.get().name,
+        "googleId": google_data["googleId"]
+    })
+
     return create_session(new_user, response)
 
 # ─── Admin Creates Account With Email+Password (for Director/BRANCH_ADMIN/HR) ───
@@ -223,15 +390,15 @@ def create_user_by_admin(
     current_user=Depends(get_current_user)
 ):
     """
-    CEO creates Director or HR accounts (email/password).
-    Director creates Branch Admin or HR accounts (email/password).
-    The new user can later link their Google account on first login.
+    Hierarchical account creation. Adds mapping to global coordinator users table.
     """
     if current_user["role"] in ("BRANCH_ADMIN", "ADMIN"):
         raise HTTPException(status_code=403, detail="Branch Admins cannot create accounts")
 
     if data.role == "CEO":
         raise HTTPException(status_code=403, detail="CEO accounts cannot be created via this endpoint")
+
+    email_clean = data.email.strip().lower()
 
     if data.role == "DIRECTOR":
         if current_user["role"] != "CEO":
@@ -273,7 +440,6 @@ def create_user_by_admin(
                 if not country:
                     country = branch.get("country")
         else:
-            # Director is creating: country is inherited
             country = current_user.get("country")
             branch_id = ObjectId(data.branchId) if data.branchId else None
             if branch_id:
@@ -283,16 +449,34 @@ def create_user_by_admin(
                 if branch.get("country") != current_user.get("country"):
                     raise HTTPException(status_code=403, detail="Cannot assign HR to branch outside your country")
     else:
-        raise HTTPException(status_code=400, detail="Invalid role. Must be DIRECTOR, BRANCH_ADMIN, ADMIN, or HR")
+        raise HTTPException(status_code=400, detail="Invalid role")
 
-
-    if db.users.find_one({"email": data.email}):
+    # Check coordinator globally first
+    if coordinator_db.users.find_one({"email": email_clean}):
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    pwd_hash = hash_password(data.password)
+    tenant_id_str = current_user.get("tenant_id")
+    tenant_id = ObjectId(tenant_id_str) if tenant_id_str else None
+
+    # Check seats limit
+    if tenant_id_str:
+        tenant = coordinator_db.tenants.find_one({"_id": ObjectId(tenant_id_str)})
+        if tenant:
+            seats_limit = tenant.get("seatsLimit", 1)
+            current_seats = db.users.count_documents({})
+            if current_seats >= seats_limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Upgrade required. Your plan allows up to {seats_limit} team seat(s)."
+                )
+
+    # Insert in tenant database
     new_user = {
-        "email": data.email,
+        "email": email_clean,
         "name": data.name,
-        "passwordHash": hash_password(data.password),
+        "passwordHash": pwd_hash,
+        "rawPassword": data.password,
         "googleId": None,
         "role": data.role,
         "country": country,
@@ -305,11 +489,24 @@ def create_user_by_admin(
         "isActive": True,
         "totpEnabled": False,
         "totpSecret": None,
+        "tenant_id": tenant_id,
         "createdAt": datetime.now(timezone.utc),
         "updatedAt": datetime.now(timezone.utc),
     }
 
     result = db.users.insert_one(new_user)
+
+    # Insert globally in coordinator mapping
+    coordinator_db.users.insert_one({
+        "email": email_clean,
+        "passwordHash": pwd_hash,
+        "rawPassword": data.password,
+        "role": data.role,
+        "tenant_id": tenant_id,
+        "db_name": db_context.get().name,
+        "googleId": None
+    })
+
     return {"message": "Account created successfully", "userId": str(result.inserted_id)}
 
 # ─── Forgot Password / Reset Password ──────────────────────────────────────────
@@ -318,16 +515,16 @@ def create_user_by_admin(
 def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTasks, _rl=Depends(limiter.limit(3, 60))):
     from utils.email_utils import send_otp_email
 
-    user = db.users.find_one({"email": req.email})
+    email_clean = req.email.strip().lower()
+    user = coordinator_db.users.find_one({"email": email_clean})
     if not user:
-        # Return success to prevent email enumeration
         return {"message": "If an account exists, an OTP has been sent."}
 
     otp = str(random.randint(100000, 999999))
 
-    # Store OTP in DB FIRST so it's ready before email is sent
-    db.passwordResets.update_one(
-        {"email": req.email},
+    # Store OTP globally in coordinator
+    coordinator_db.passwordResets.update_one(
+        {"email": email_clean},
         {
             "$set": {
                 "otp": hash_password(otp),
@@ -337,28 +534,23 @@ def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTask
         upsert=True
     )
 
-    # Send email in background — does NOT block the response (fixes 504 timeout)
-    def send_email_task(email: str, otp_code: str):
-        sent = send_otp_email(email, otp_code)
-        if not sent and not _IS_PRODUCTION:
-            print(f"\n========================================================")
-            print(f"[DEV FALLBACK] PASSWORD RESET OTP FOR {email} IS: {otp_code}")
-            print(f"========================================================\n")
+    # Dev backup file
+    with open("latest_otp.txt", "w") as f:
+        f.write(f"OTP for {email_clean} is: {otp}\n")
 
-    background_tasks.add_task(send_email_task, req.email, otp)
-
+    background_tasks.add_task(send_otp_email, email_clean, otp)
     return {"message": "If an account exists, an OTP has been sent."}
 
 @router.post("/verify-reset-otp")
 def verify_reset_otp(req: VerifyForgotPasswordOTP, _rl=Depends(limiter.limit(5, 60))):
-    reset_doc = db.passwordResets.find_one({"email": req.email})
+    email_clean = req.email.strip().lower()
+    reset_doc = coordinator_db.passwordResets.find_one({"email": email_clean})
     if not reset_doc:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP.")
         
-    # Check if expired (e.g. 15 mins = 900 seconds)
     age = (datetime.now(timezone.utc) - reset_doc["createdAt"].replace(tzinfo=timezone.utc)).total_seconds()
     if age > 900:
-        db.passwordResets.delete_one({"email": req.email})
+        coordinator_db.passwordResets.delete_one({"email": email_clean})
         raise HTTPException(status_code=400, detail="OTP has expired.")
         
     if not verify_password(req.otp, reset_doc["otp"]):
@@ -368,60 +560,98 @@ def verify_reset_otp(req: VerifyForgotPasswordOTP, _rl=Depends(limiter.limit(5, 
 
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordRequest, _rl=Depends(limiter.limit(3, 60))):
-    reset_doc = db.passwordResets.find_one({"email": req.email})
+    email_clean = req.email.strip().lower()
+    reset_doc = coordinator_db.passwordResets.find_one({"email": email_clean})
     if not reset_doc:
         raise HTTPException(status_code=400, detail="Invalid or expired request.")
         
     age = (datetime.now(timezone.utc) - reset_doc["createdAt"].replace(tzinfo=timezone.utc)).total_seconds()
     if age > 900:
-        db.passwordResets.delete_one({"email": req.email})
+        coordinator_db.passwordResets.delete_one({"email": email_clean})
         raise HTTPException(status_code=400, detail="OTP has expired.")
         
     if not verify_password(req.otp, reset_doc["otp"]):
         raise HTTPException(status_code=400, detail="Invalid OTP.")
         
-    user = db.users.find_one({"email": req.email})
-    if not user:
+    coord_user = coordinator_db.users.find_one({"email": email_clean})
+    if not coord_user:
         raise HTTPException(status_code=404, detail="User not found.")
-        
-    db.users.update_one(
-        {"_id": user["_id"]},
-        {
-            "$set": {"passwordHash": hash_password(req.newPassword)},
-            "$inc": {"tokenVersion": 1}
-        }
+
+    pwd_hash = hash_password(req.newPassword)
+
+    # 1. Update in coordinator
+    coordinator_db.users.update_one(
+        {"_id": coord_user["_id"]},
+        {"$set": {"passwordHash": pwd_hash, "rawPassword": req.newPassword}}
     )
     
+    # 2. Update in tenant DB
+    db_name = coord_user.get("db_name")
+    if db_name:
+        token_token = db_context.set(client[db_name])
+        try:
+            db.users.update_one(
+                {"email": email_clean},
+                {
+                    "$set": {"passwordHash": pwd_hash, "rawPassword": req.newPassword},
+                    "$inc": {"tokenVersion": 1}
+                }
+            )
+        finally:
+            db_context.reset(token_token)
+            
     # Consume OTP
-    db.passwordResets.delete_one({"email": req.email})
-    
+    coordinator_db.passwordResets.delete_one({"email": email_clean})
     return {"message": "Password reset successfully. You can now login."}
 
 # ─── MFA ──────────────────────────────────────────────────────────────────────
 
 @router.post("/mfa")
 def verify_mfa(request: Request, response: Response, mfa_data: VerifyMfa, _rl=Depends(limiter.limit(10, 60))):
-    user_id_str = request.cookies.get("pangaea_mfa_pending")
-    if not user_id_str:
-        user = db.users.find_one({"email": mfa_data.email})
-    else:
-        user = db.users.find_one({"_id": ObjectId(user_id_str)})
-
-    if not user or not user.get("totpEnabled"):
+    user_id_str = request.cookies.get("nexus_mfa_pending")
+    email_clean = mfa_data.email.strip().lower()
+    
+    # Look up coordinator first to find tenant DB
+    coord_user = coordinator_db.users.find_one({
+        "$or": [
+            {"_id": ObjectId(user_id_str)} if user_id_str else {"email": "IMPOSSIBLE_email"},
+            {"email": email_clean}
+        ]
+    })
+    
+    if not coord_user:
         raise HTTPException(status_code=400, detail="Invalid MFA request")
 
-    totp = pyotp.TOTP(user["totpSecret"])
-    if not totp.verify(mfa_data.code):
-        raise HTTPException(status_code=401, detail="Invalid code")
+    db_name = coord_user.get("db_name")
+    if not db_name:
+        raise HTTPException(status_code=400, detail="Invalid tenant DB setup")
 
-    response.delete_cookie("pangaea_mfa_pending")
-    return create_session(user, response)
+    # Switch context to tenant DB to check TOTP secret
+    token_token = db_context.set(client[db_name])
+    try:
+        if user_id_str:
+            user = db.users.find_one({"_id": ObjectId(user_id_str)})
+        else:
+            user = db.users.find_one({"email": email_clean})
+
+        if not user or not user.get("totpEnabled"):
+            raise HTTPException(status_code=400, detail="Invalid MFA request")
+
+        totp = pyotp.TOTP(user["totpSecret"])
+        if not totp.verify(mfa_data.code):
+            raise HTTPException(status_code=401, detail="Invalid code")
+
+        response.delete_cookie("nexus_mfa_pending")
+        user["tenant_id"] = coord_user.get("tenant_id")
+        return create_session(user, response)
+    finally:
+        db_context.reset(token_token)
 
 @router.post("/totp/setup")
 def totp_setup(current_user=Depends(get_current_user)):
     secret = generate_totp_secret()
     db.users.update_one({"_id": current_user["_id"]}, {"$set": {"totpSecret": secret}})
-    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=current_user["email"], issuer_name="Pangaea Pathways CRM")
+    uri = pyotp.totp.TOTP(secret).provisioning_uri(name=current_user["email"], issuer_name="Nexus CRM")
     return {"secret": secret, "uri": uri}
 
 @router.post("/totp/enable")
@@ -443,22 +673,48 @@ def totp_disable(current_user=Depends(get_current_user)):
 
 @router.post("/logout")
 def logout(request: Request, response: Response):
-    token = request.cookies.get("pangaea_session")
+    token = request.cookies.get("nexus_session")
     if token:
         try:
             payload = decode_access_token(token)
             if payload and "sub" in payload:
-                db.users.update_one(
-                    {"_id": ObjectId(payload["sub"])},
-                    {"$inc": {"tokenVersion": 1}}
-                )
+                # We need to know user's database name to update tokenVersion
+                db_name = payload.get("db_name")
+                if db_name:
+                    token_token = db_context.set(client[db_name])
+                    try:
+                        db.users.update_one(
+                            {"_id": ObjectId(payload["sub"])},
+                            {"$inc": {"tokenVersion": 1}}
+                        )
+                    finally:
+                        db_context.reset(token_token)
         except Exception:
             pass
-    response.delete_cookie("pangaea_session")
+    response.delete_cookie("nexus_session")
     return {"ok": True}
 
 @router.get("/me")
 def get_me(current_user=Depends(get_current_user)):
+    # Look up subscription status in the coordinator database for safety
+    subscription_status = "inactive"
+    plan_id = "starter"
+    seats_limit = 1
+    profiles_limit = 100
+    
+    tenant_id_str = current_user.get("tenant_id")
+    if tenant_id_str:
+        tenant = coordinator_db.tenants.find_one({"_id": ObjectId(tenant_id_str)})
+        if tenant:
+            subscription_status = tenant.get("subscription_status", "inactive")
+            plan_id = tenant.get("planId", "starter")
+            seats_limit = tenant.get("seatsLimit", 1)
+            profiles_limit = tenant.get("profilesLimit", 100)
+            
+    # Count usage in tenant database
+    current_seats = db.users.count_documents({})
+    current_profiles = db.leads.count_documents({})
+            
     return {
         "id": str(current_user["_id"]),
         "email": current_user["email"],
@@ -468,4 +724,17 @@ def get_me(current_user=Depends(get_current_user)):
         "branchId": str(current_user["branchId"]) if current_user.get("branchId") else None,
         "totpEnabled": current_user.get("totpEnabled", False),
         "isActive": current_user.get("isActive", True),
+        "subscriptionStatus": subscription_status,
+        "planId": plan_id,
+        "limits": {
+            "seatsLimit": seats_limit,
+            "profilesLimit": profiles_limit
+        },
+        "usage": {
+            "seatsCount": current_seats,
+            "profilesCount": current_profiles
+        },
+        "tenantId": str(tenant_id_str) if tenant_id_str else None
     }
+
+

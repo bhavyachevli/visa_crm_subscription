@@ -4,6 +4,8 @@ import { AuthProvider } from './lib/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import RegisterTenant from './pages/RegisterTenant';
+import BillingPortal from './pages/BillingPortal';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import NewLead from './pages/NewLead';
@@ -35,11 +37,13 @@ function App() {
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<RegisterTenant />} />
 
             {/* All authenticated users */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/billing" element={<BillingPortal />} />
                 <Route path="/immigration" element={<AgentDashboard />} />
                 <Route path="/client-portal" element={<ClientPortal />} />
                 <Route path="/profile" element={<Profile />} />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { Lock, Mail, Shield, AlertCircle, KeyRound, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
-import logo from "../../../public/logo/PP.png";
+import logo from "../../../public/logo/nexus_logo.png";
 import axios from 'axios';
 import './Login.css';
 
@@ -161,7 +161,7 @@ export default function Login() {
                         <img src={logo} alt="" className="login-logo-img" />
                     </div>
                     <h1 className="login-title">
-                        Pangaea Pathways
+                        Nexus CRM
                     </h1>
                     <p className="login-subtitle">
                         {view === 'login' && 'Sign in to your CRM account'}
@@ -209,7 +209,7 @@ export default function Login() {
                                 <label className="login-label">Email address</label>
                                 <div className="login-input-wrapper">
                                     <Mail size={16} className="login-input-icon" />
-                                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="login-input" placeholder="you@pangaea.com" />
+                                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="login-input" placeholder="you@nexus.com" />
                                 </div>
                             </div>
 
@@ -281,7 +281,7 @@ export default function Login() {
                             <label className="login-label">Email address</label>
                             <div className="login-input-wrapper">
                                 <Mail size={16} className="login-input-icon" />
-                                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="login-input" placeholder="you@pangaea.com" />
+                                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="login-input" placeholder="you@nexus.com" />
                             </div>
                         </div>
                         <button type="submit" disabled={loading} className="login-btn-primary mt-2">

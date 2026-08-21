@@ -10,7 +10,7 @@ from bson import ObjectId
 
 def get_current_user(request: Request):
     """Decode JWT session cookie and return the full user document."""
-    token = request.cookies.get("pangaea_session")
+    token = request.cookies.get("nexus_session")
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 

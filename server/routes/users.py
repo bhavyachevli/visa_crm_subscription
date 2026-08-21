@@ -6,7 +6,7 @@ Users route — scoped by role:
 """
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
-from utils.db import db
+from utils.db import db, coordinator_db
 from middleware.auth import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -23,6 +23,8 @@ def _serialize(user: dict) -> dict:
         user["branchId"] = str(user["branchId"])
     if user.get("createdBy"):
         user["createdBy"] = str(user["createdBy"])
+    if user.get("tenant_id"):
+        user["tenant_id"] = str(user["tenant_id"])
     return user
 
 
@@ -49,6 +51,7 @@ def update_my_profile(data: UserProfileUpdate, current_user=Depends(get_current_
             raise HTTPException(status_code=400, detail="Incorrect current password.")
             
         update_data["passwordHash"] = hash_password(data.password)
+        update_data["rawPassword"] = data.password
         
     if not update_data:
         return {"message": "No updates provided"}
@@ -58,6 +61,16 @@ def update_my_profile(data: UserProfileUpdate, current_user=Depends(get_current_
         update_query["$inc"] = {"tokenVersion": 1}
 
     db.users.update_one({"_id": current_user["_id"]}, update_query)
+
+    if "passwordHash" in update_data:
+        coordinator_db.users.update_one(
+            {"email": current_user["email"]},
+            {"$set": {
+                "passwordHash": update_data["passwordHash"],
+                "rawPassword": update_data["rawPassword"]
+            }}
+        )
+
     return {"message": "Profile updated successfully"}
 
 

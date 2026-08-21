@@ -61,6 +61,35 @@ def request_leave(leave: LeaveRequestCreate, current_user = Depends(get_current_
     doc["status"] = "PENDING"
     doc["createdAt"] = datetime.now(timezone.utc)
     db.leaveRequests.insert_one(doc)
+
+    # Notify CEO and country Directors
+    notif_recipients = list(db.users.find({"role": "CEO"}))
+    if current_user.get("country"):
+        directors = list(db.users.find({
+            "role": "DIRECTOR",
+            "country": current_user["country"]
+        }))
+        notif_recipients.extend(directors)
+
+    # De-duplicate recipients list
+    seen_ids = set()
+    unique_recipients = []
+    for r in notif_recipients:
+        if str(r["_id"]) not in seen_ids:
+            seen_ids.add(str(r["_id"]))
+            unique_recipients.append(r)
+
+    for r in unique_recipients:
+        db.notifications.insert_one({
+            "userId": r["_id"],
+            "title": "New Leave Request",
+            "message": f"{current_user.get('name', 'Staff')} requested leave from {leave.startDate} to {leave.endDate}.",
+            "type": "LEAVE_UPDATE",
+            "read": False,
+            "link": "/hr",
+            "createdAt": datetime.now(timezone.utc)
+        })
+
     return {"message": "Leave requested"}
 
 @router.get("/leave/me")
@@ -239,6 +268,18 @@ def update_leave_status(leave_id: str, payload: dict, current_user: dict = Depen
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Leave request not found")
+
+    # Notify requester of approval/rejection status
+    db.notifications.insert_one({
+        "userId": leave["userId"],
+        "title": f"Leave Request {new_status.capitalize()}",
+        "message": f"Your leave request for {leave.get('startDate')} to {leave.get('endDate')} has been {new_status.lower()}.",
+        "type": "LEAVE_UPDATE",
+        "read": False,
+        "link": "/attendance",
+        "createdAt": datetime.now(timezone.utc)
+    })
+
     return {"message": f"Leave status updated to {new_status}"}
 
 @router.patch("/attendance/{record_id}/status")

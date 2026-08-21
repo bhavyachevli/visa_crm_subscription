@@ -4,7 +4,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0f172aff 0%, #40586fff 50%, #0ea5e9ff 100%);
+    background: linear-gradient(135deg, #020617 0%, #064e3b 50%, #022c22 100%);
     padding: 2rem;
 }
 
@@ -149,7 +149,7 @@
 }
 
 .login-input:focus {
-    border-color: rgba(255, 255, 255, 0.5);
+    border-color: #10b981;
 }
 
 .login-input-password {
@@ -194,8 +194,9 @@
 .login-btn-primary {
     width: 100%;
     padding: 0.85rem;
-    background: linear-gradient(135deg, #0ea5e9, #11214dff);
-    border: none;
+    background: linear-gradient(135deg, #10b981, #064e3b);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
     border-radius: 10px;
     color: white;
     font-weight: 700;
@@ -237,7 +238,7 @@
 }
 
 .login-mfa-icon {
-    color: #0ea5e9;
+    color: #10b981;
     margin: 0 auto 0.5rem;
 }
 

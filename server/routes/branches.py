@@ -10,9 +10,10 @@ from datetime import datetime, timezone
 
 from utils.db import db
 from middleware.auth import get_current_user
+from middleware.subscription import require_active_subscription
 from models.schemas import BranchCreate
 
-router = APIRouter(prefix="/api/meta/branches", tags=["branches"])
+router = APIRouter(prefix="/api/meta/branches", tags=["branches"], dependencies=[Depends(require_active_subscription)])
 
 
 @router.get("")

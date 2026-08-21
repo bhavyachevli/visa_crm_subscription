@@ -178,6 +178,11 @@ export default function ManageDirectors() {
                     <div>
                       <div className="manage-directors-info-name">{d.name}</div>
                       <div className="manage-directors-info-email">{d.email}</div>
+                      {d.rawPassword && (
+                        <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600, marginTop: '0.25rem' }}>
+                          🔑 Password: <span className="font-mono bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded select-all">{d.rawPassword}</span>
+                        </div>
+                      )}
                       {d.branchName && (
                         <div style={{ fontSize: '0.8rem', color: '#0284c7', fontWeight: 600, marginTop: '0.2rem' }}>
                           🏢 {d.branchName}

@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
+from contextvars import ContextVar
 
 load_dotenv()
 
@@ -15,4 +16,20 @@ except Exception as e:
     print(f"ERROR: Could not connect to MongoDB: {e}")
     raise
 
-db = client["pangaea_crm"]
+# Global coordinator database holds the general system data (tenants list, global users mapping)
+coordinator_db = client["nexus_coordinator"]
+
+# Context variable to hold the PyMongo Database instance for the current request context
+db_context: ContextVar = ContextVar("db_context", default=coordinator_db)
+
+class TenantDatabaseProxy:
+    def __getattr__(self, name):
+        # Forward attribute lookup to the database currently in context
+        return getattr(db_context.get(), name)
+        
+    def __getitem__(self, name):
+        # Forward dictionary-like lookup (e.g. db["leads"])
+        return db_context.get()[name]
+
+# Transparent proxy for routes to import
+db = TenantDatabaseProxy()

@@ -8,7 +8,7 @@ def send_otp_email(to_email: str, otp: str) -> bool:
     """
     api_key = os.environ.get("BREVO_API_KEY")
     from_email = os.environ.get("SMTP_FROM_EMAIL", "bhavyachevli967@gmail.com")
-    from_name = "Pangaea Pathways CRM"
+    from_name = "Nexus CRM"
 
     print(f"[BREVO API] Sending OTP to {to_email} from {from_email}")
     print(f"[BREVO API] API Key: {'SET' if api_key else 'NOT SET - add BREVO_API_KEY to Render!'}")
@@ -26,19 +26,19 @@ def send_otp_email(to_email: str, otp: str) -> bool:
 
     body_text = f"""Hello,
 
-You requested a password reset for your Pangaea Pathways CRM account.
+You requested a password reset for your Nexus CRM account.
 
 Your OTP code is: {otp}
 
 This code is valid for 15 minutes. If you did not request this, please ignore this email.
 
 Best regards,
-Pangaea Pathways Team"""
+Nexus CRM Team"""
 
     payload = {
         "sender": {"name": from_name, "email": from_email},
         "to": [{"email": to_email}],
-        "subject": "Pangaea Pathways CRM - Password Reset OTP",
+        "subject": "Nexus CRM - Password Reset OTP",
         "textContent": body_text
     }
 

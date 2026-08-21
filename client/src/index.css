@@ -2,10 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Modern Theme CSS Variables ───────────────────────────────────────── */
 :root {
-  --bg: #f0f9ff;
+  /* Light Mode Defaults */
+  --bg: #f8fafc;
   --card: #ffffff;
-  --ink: #0c4a6e;
+  --ink: #0f172a;
+  --border: #e2e8f0;
+  --emerald: #10b981;
+  --mint: #059669;
+  --muted-text: #64748b;
+  --light-text: #475569;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --accent-hover: rgba(16, 185, 129, 0.04);
+  --input-bg: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.8);
+  --sidebar-bg: #0f172a;
+  /* Keep sidebar dark slate for premium contrast */
+  --nav-link: rgba(255, 255, 255, 0.6);
+  --nav-hover: rgba(255, 255, 255, 0.04);
+  --nav-active: rgba(16, 185, 129, 0.15);
+  --nav-active-text: #34d399;
+}
+
+.dark {
+  /* Dark Mode Overrides */
+  --bg: #020617;
+  --card: rgba(15, 23, 42, 0.45);
+  --ink: #f8fafc;
+  --border: rgba(255, 255, 255, 0.05);
+  --emerald: #10b981;
+  --mint: #34d399;
+  --muted-text: #94a3b8;
+  --light-text: #cbd5e1;
+  --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  --accent-hover: rgba(16, 185, 129, 0.08);
+  --input-bg: rgba(15, 23, 42, 0.7);
+  --header-bg: rgba(15, 23, 42, 0.6);
+  --sidebar-bg: rgba(15, 23, 42, 0.7);
+  --nav-link: rgba(248, 250, 252, 0.55);
+  --nav-hover: rgba(255, 255, 255, 0.03);
+  --nav-active: rgba(16, 185, 129, 0.12);
+  --nav-active-text: #34d399;
 }
 
 html,
@@ -14,16 +52,20 @@ body {
   padding: 0;
   height: 100%;
   height: 100dvh;
-  overflow: hidden; /* Prevents outer browser window scrollbars completely */
+  overflow: hidden;
+  /* Prevents outer browser window scrollbars completely */
   background-color: var(--bg);
   color: var(--ink);
   font-family: 'Inter', sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @media (max-width: 768px) {
+
   html,
   body {
-    overflow: auto; /* Fallback scroll for mobile browsers if layout exceeds screen */
+    overflow: auto;
+    /* Fallback scroll for mobile browsers if layout exceeds screen */
   }
 }
 
@@ -31,6 +73,7 @@ body {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -44,13 +87,14 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
 /* Custom premium scrollbar styling */
@@ -65,23 +109,23 @@ body {
 
 /* Match scrollbar track background with page content background */
 .layout-content::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: var(--bg);
 }
 
 /* Match scrollbar track background with dark sidebar background */
 .layout-nav::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--sidebar-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.2);
+  background: rgba(16, 185, 129, 0.15);
   border-radius: 99px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.4);
+  background: rgba(16, 185, 129, 0.3);
 }
 
 /* Prevent layout shift when scrollbars toggle on page content */
@@ -92,7 +136,195 @@ body {
 /* Standard scrollbar for other browsers */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.2) transparent;
+  scrollbar-color: rgba(16, 185, 129, 0.15) transparent;
 }
 
+/* ─── Global Glassmorphism & Theme Class mappings ──────────────────────── */
 
+/* Dynamic Cards (changes with light/dark theme variables) */
+.bg-white,
+.bg-slate-50,
+.bg-gray-50,
+.bg-slate-100 {
+  background-color: var(--card) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  color: var(--ink) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Text styling overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--ink) !important;
+}
+
+p,
+span,
+label,
+th,
+td,
+div {
+  color: var(--light-text);
+}
+
+.text-slate-700,
+.text-gray-700,
+.text-slate-800,
+.text-gray-800 {
+  color: var(--light-text) !important;
+}
+
+.text-slate-500,
+.text-gray-500 {
+  color: var(--muted-text) !important;
+}
+
+.text-slate-900,
+.text-gray-900 {
+  color: var(--ink) !important;
+}
+
+/* Form Inputs, Select lists, Textareas */
+input,
+select,
+textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  padding: 0.6rem 0.9rem !important;
+  transition: all 0.2s ease !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--emerald) !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+  outline: none !important;
+}
+
+/* Buttons defaults */
+button.bg-white {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--ink) !important;
+}
+
+button.bg-white:hover {
+  background-color: var(--bg) !important;
+  border-color: var(--emerald) !important;
+}
+
+/* ─── Clean Dashboard Tables (Flat Row Layout) ─────────────────────────── */
+table {
+  border-collapse: collapse !important;
+  width: 100%;
+}
+
+thead tr {
+  background: transparent !important;
+}
+
+thead th {
+  color: var(--muted-text) !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 2px solid var(--border) !important;
+  padding: 0.85rem 1rem !important;
+  text-align: left;
+}
+
+tbody tr {
+  background-color: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+tbody tr:hover {
+  background-color: var(--accent-hover) !important;
+  transform: none !important;
+  /* Removed hover translateY lift */
+  box-shadow: none !important;
+  /* Removed hover shadow glow */
+}
+
+tbody td {
+  padding: 0.95rem 1rem !important;
+  color: var(--ink) !important;
+  border: none !important;
+}
+
+tbody td:first-child {
+  border-top-left-radius: 0px !important;
+  border-bottom-left-radius: 0px !important;
+}
+
+tbody td:last-child {
+  border-top-right-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+}
+
+/* ─── High Contrast & Utilities Color Overrides ────────────────────────── */
+
+/* Glassmorphic panels with opacity modifiers */
+.bg-white\/80,
+.bg-white\/90,
+.bg-white\/70,
+.bg-slate-200\/60,
+.bg-slate-50\/50,
+.bg-slate-200\/60 {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+/* Nested card layers to differentiate backgrounds */
+.bg-slate-50,
+.bg-gray-50 {
+  background-color: rgba(100, 116, 139, 0.06) !important;
+  border-color: var(--border) !important;
+}
+
+/* Zebra striping for table row readability */
+tbody tr:nth-child(even) {
+  background-color: rgba(100, 116, 139, 0.02) !important;
+}
+
+/* Text Visibility */
+.text-slate-400,
+.text-gray-400 {
+  color: var(--muted-text) !important;
+}
+
+/* Form selects, checkmarks and badge mapping to Emerald */
+.bg-blue-50,
+.bg-blue-100 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.text-blue-700,
+.text-blue-800,
+.text-indigo-600,
+.text-blue-600,
+.text-indigo-500 {
+  color: var(--emerald) !important;
+}
+
+.border-blue-100,
+.border-slate-200\/60 {
+  border-color: var(--border) !important;
+}
+
+.text-slate-700,
+.text-gray-700 {
+  color: var(--light-text) !important;
+}

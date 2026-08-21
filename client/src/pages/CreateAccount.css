@@ -193,3 +193,87 @@
     flex-direction: column;
   }
 }
+
+/* MODERN EMERALD & GLASSMORPHIC DARK MODE OVERRIDES */
+
+.create-account-title {
+  color: #f8fafc !important;
+}
+
+.create-account-subtitle {
+  color: #94a3b8 !important;
+}
+
+.create-account-card {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+.create-account-icon-wrapper {
+  background: linear-gradient(135deg, #10b981, #064e3b) !important;
+}
+
+.create-account-mode-toggle {
+  background: rgba(15, 23, 42, 0.6) !important;
+}
+
+.create-account-mode-btn.active {
+  background: rgba(30, 41, 59, 0.8) !important;
+  color: #10b981 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.create-account-mode-btn.inactive {
+  color: rgba(248, 250, 252, 0.4) !important;
+}
+
+.create-account-label {
+  color: #cbd5e1 !important;
+}
+
+.create-account-input {
+  background-color: rgba(15, 23, 42, 0.7) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.create-account-input:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25) !important;
+}
+
+.create-account-auto-assigned {
+  background: rgba(15, 23, 42, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #cbd5e1 !important;
+}
+
+.create-account-submit {
+  background: linear-gradient(135deg, #10b981, #064e3b) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+.create-account-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #a7f3d0 !important;
+}
+
+.create-account-error {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+}
+
+.create-account-google-hint {
+  color: #94a3b8 !important;
+}
+
+.create-account-google-warning {
+  background: rgba(15, 23, 42, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #94a3b8 !important;
+}

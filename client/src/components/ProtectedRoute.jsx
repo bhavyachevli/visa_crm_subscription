@@ -1,16 +1,13 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 
 /**
- * ProtectedRoute — blocks unauthenticated users.
+ * ProtectedRoute — blocks unauthenticated users and enforces active subscription.
  * Optional `roles` prop restricts to specific roles.
- * 
- * Usage in App.jsx:
- *   <Route element={<ProtectedRoute />}>           // Any logged-in user
- *   <Route element={<ProtectedRoute roles={['CEO']} />}>  // CEO only
  */
 export function ProtectedRoute({ roles }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -24,9 +21,16 @@ export function ProtectedRoute({ roles }) {
     return <Navigate to="/login" replace />;
   }
 
+  // Enforce subscription gate (unless navigating to the billing portal page itself)
+  const isSubscribed = user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing';
+  if (!isSubscribed && location.pathname !== '/billing') {
+    return <Navigate to="/billing" replace />;
+  }
+
   if (roles && !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;
 }
+

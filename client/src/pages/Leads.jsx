@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Trash2, MoreVertical, Users, User, Download, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Edit, FileText } from 'lucide-react';
+import { Plus, Search, Trash2, MoreVertical, Users, User, Download, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Edit, FileText, ArrowRightLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../lib/AuthContext';
 import FollowUpModal from '../components/FollowUpModal';
+import TransferModal from '../components/TransferModal';
 
 const getServiceDisplayName = (prod) => {
   const mapping = {
@@ -38,8 +39,10 @@ export default function Leads() {
   const [currentPage, setCurrentPage] = useState(1);
   const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState(null);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferLeadId, setTransferLeadId] = useState(null);
   const perPage = 25;
-  const { user, isCEO } = useAuth();
+  const { user, isCEO, isDirector } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -234,8 +237,7 @@ export default function Leads() {
             paginatedLeads.map((lead, idx) => (
               <div
                 key={lead._id}
-                onClick={() => navigate(`/leads/${lead._id}`)}
-                className="grid grid-cols-1 md:grid-cols-12 px-4 py-4 hover:bg-sky-50/50 transition-colors items-start md:items-center gap-3 md:gap-0 cursor-pointer border-b border-slate-100"
+                className="grid grid-cols-1 md:grid-cols-12 px-4 py-4 transition-colors items-start md:items-center gap-3 md:gap-0 border-b border-slate-100"
                 style={{ borderLeft: '3px solid #C084FC' }}
               >
                 {/* LEAD */}
@@ -392,6 +394,11 @@ export default function Leads() {
                         <button onClick={() => { setSelectedLeadId(lead._id); setFollowUpModalOpen(true); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 flex items-center">
                           <Calendar className="w-3.5 h-3.5 mr-2 text-sky-600" /> Add Follow-up
                         </button>
+                        {(isCEO || isDirector) && (
+                          <button onClick={() => { setTransferLeadId(lead._id); setTransferModalOpen(true); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 flex items-center">
+                            <ArrowRightLeft className="w-3.5 h-3.5 mr-2 text-sky-600" /> Transfer Lead
+                          </button>
+                        )}
                         {isCEO && (
                           <>
                             <div className="border-t border-slate-100 my-1"></div>
@@ -437,6 +444,12 @@ export default function Leads() {
         onClose={() => { setFollowUpModalOpen(false); setSelectedLeadId(null); }}
         leadId={selectedLeadId}
         onSuccess={fetchLeads}
+      />
+      <TransferModal
+        isOpen={transferModalOpen}
+        onClose={() => { setTransferModalOpen(false); setTransferLeadId(null); }}
+        leadId={transferLeadId}
+        onSuccess={() => fetchLeads(activeTab)}
       />
     </div>
   );

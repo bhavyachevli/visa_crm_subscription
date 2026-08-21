@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from bson import ObjectId
 from datetime import datetime, timezone
 
-from utils.db import db
+from utils.db import db, coordinator_db
 from middleware.auth import get_current_user
 from models.schemas import LeadCreate, LeadUpdate, LeadTransferRequest, DuplicateLeadRequest
 
@@ -103,6 +103,19 @@ async def create_lead(request: Request, lead: LeadCreate, current_user=Depends(g
     lead_dict = lead.model_dump(exclude_unset=True)
     _sync_flat_properties(lead_dict)
 
+    # Check student profiles limit
+    tenant_id_str = current_user.get("tenant_id")
+    if tenant_id_str:
+        tenant = coordinator_db.tenants.find_one({"_id": ObjectId(tenant_id_str)})
+        if tenant:
+            profiles_limit = tenant.get("profilesLimit", 100)
+            current_leads = db.leads.count_documents({})
+            if current_leads >= profiles_limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Upgrade required. Your plan allows up to {profiles_limit} student profiles."
+                )
+
     # Debug logging
     try:
         import json
@@ -153,6 +166,20 @@ async def create_lead(request: Request, lead: LeadCreate, current_user=Depends(g
     lead_dict["leadNo"] = next_lead_no
 
     result = db.leads.insert_one(lead_dict)
+
+    # Notify assignee if lead is assigned
+    if lead.ownerId:
+        lead_code = _get_lead_code(lead_dict)
+        db.notifications.insert_one({
+            "userId": ObjectId(lead.ownerId),
+            "title": "New Lead Assigned",
+            "message": f"Lead {lead_code} ({lead_dict.get('fullName', 'Unnamed')}) has been assigned to you.",
+            "type": "LEAD_ASSIGNED",
+            "read": False,
+            "link": f"/leads/{result.inserted_id}",
+            "createdAt": datetime.now(timezone.utc)
+        })
+
     return {"message": "Lead created successfully", "id": str(result.inserted_id)}
 
 
@@ -438,7 +465,80 @@ def transfer_leads(req: LeadTransferRequest, current_user=Depends(get_current_us
         "timestamp": datetime.now(timezone.utc)
     })
 
+    # Notify destination user of bulk transfer
+    db.notifications.insert_one({
+        "userId": ObjectId(req.destinationUserId),
+        "title": "Bulk Leads Transferred to You",
+        "message": f"{result.modified_count} leads have been bulk transferred to your account.",
+        "type": "LEAD_ASSIGNED",
+        "read": False,
+        "link": "/leads",
+        "createdAt": datetime.now(timezone.utc)
+    })
+
     return {"message": "Leads transferred successfully", "transferred_count": result.modified_count}
+
+
+from pydantic import BaseModel
+
+class SingleLeadTransferRequest(BaseModel):
+    destinationUserId: str
+    destinationBranchId: str
+    transferReason: str
+
+@router.post("/{lead_id}/transfer")
+def transfer_single_lead(lead_id: str, req: SingleLeadTransferRequest, current_user=Depends(get_current_user)):
+    """Transfers a single specific lead to a new user and branch."""
+    if current_user["role"] not in ("CEO", "DIRECTOR"):
+        raise HTTPException(status_code=403, detail="Only CEO or Director can transfer leads")
+
+    # Validate destination
+    if not db.users.find_one({"_id": ObjectId(req.destinationUserId)}):
+        raise HTTPException(status_code=404, detail="Destination user not found")
+    if not db.branches.find_one({"_id": ObjectId(req.destinationBranchId)}):
+        raise HTTPException(status_code=404, detail="Destination branch not found")
+
+    lead = db.leads.find_one({"_id": ObjectId(lead_id)})
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    source_user_id = lead.get("ownerId")
+
+    update_payload = {
+        "$set": {
+            "ownerId": ObjectId(req.destinationUserId),
+            "branchId": ObjectId(req.destinationBranchId),
+            "updatedAt": datetime.now(timezone.utc)
+        }
+    }
+
+    db.leads.update_one({"_id": ObjectId(lead_id)}, update_payload)
+
+    # Log audit
+    db.activities.insert_one({
+        "action": "LEAD_TRANSFER",
+        "performedBy": current_user["_id"],
+        "sourceUserId": source_user_id,
+        "destinationUserId": ObjectId(req.destinationUserId),
+        "destinationBranchId": ObjectId(req.destinationBranchId),
+        "transferReason": f"[Single Lead: {lead_id}] {req.transferReason}",
+        "count": 1,
+        "timestamp": datetime.now(timezone.utc)
+    })
+
+    # Notify destination user of single transfer
+    lead_code = _get_lead_code(lead)
+    db.notifications.insert_one({
+        "userId": ObjectId(req.destinationUserId),
+        "title": "Lead Transferred to You",
+        "message": f"Lead {lead_code} ({lead.get('fullName', 'Unnamed')}) has been transferred to you.",
+        "type": "LEAD_ASSIGNED",
+        "read": False,
+        "link": f"/leads/{lead_id}",
+        "createdAt": datetime.now(timezone.utc)
+    })
+
+    return {"message": "Lead transferred successfully"}
 
 
 # ─── File Notes Endpoints ───────────────────────────────────────────────────

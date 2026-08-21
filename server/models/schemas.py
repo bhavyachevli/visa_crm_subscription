@@ -413,3 +413,24 @@ class AppointmentUpdate(BaseModel):
     notes: Optional[str] = None
     status: Optional[str] = None  # SCHEDULED | COMPLETED | CANCELLED | NO_SHOW
     model_config = {"extra": "ignore"}
+
+
+class TenantRegister(BaseModel):
+    companyName: str
+    email: EmailStr
+    password: str
+    name: str
+    planId: Optional[str] = "starter"
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v
+
+

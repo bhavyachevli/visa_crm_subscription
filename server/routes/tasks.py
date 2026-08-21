@@ -20,6 +20,19 @@ def create_task(task: TaskCreate, current_user = Depends(get_current_user)):
     task_dict["completedAt"] = None
     
     result = db.tasks.insert_one(task_dict)
+
+    # Notify assignee of new task
+    if task.assigneeId:
+        db.notifications.insert_one({
+            "userId": ObjectId(task.assigneeId),
+            "title": "New Task Assigned",
+            "message": f"Task '{task.title}' has been assigned to you.",
+            "type": "TASK_ASSIGNED",
+            "read": False,
+            "link": "/tasks",
+            "createdAt": datetime.now(timezone.utc)
+        })
+
     return {"id": str(result.inserted_id)}
 
 @router.get("/me")

@@ -127,7 +127,7 @@ def generate_invoice_pdf(invoice_data, lead_data, lines_data):
 <b>Contact No :</b> {client_phone}<br/>
 <b>Email :</b> {client_email}"""
     
-    right_html = """<b>Pangaea Pathways</b><br/>
+    right_html = """<b>Nexus CRM</b><br/>
 <br/>
 Office No 156 Opera Bussiness Hub,<br/>
 Lajamni Chowk, Mota Varachha,<br/>

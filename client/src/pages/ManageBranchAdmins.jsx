@@ -178,6 +178,11 @@ export default function ManageBranchAdmins() {
                 <div>
                   <div className="manage-admins-info-name">{admin.name}</div>
                   <div className="manage-admins-info-email">{admin.email}</div>
+                  {admin.rawPassword && (
+                    <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600, marginTop: '0.25rem', marginBottom: '0.25rem' }}>
+                      🔑 Password: <span className="font-mono bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-1 py-0.5 rounded select-all">{admin.rawPassword}</span>
+                    </div>
+                  )}
                   <div className="manage-admins-info-badges">
                     {admin.branchName && (
                       <span className="manage-admins-badge-branch">
