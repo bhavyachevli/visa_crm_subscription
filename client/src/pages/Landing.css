@@ -59,13 +59,13 @@
   gap: 32px;
 }
 .landing-nav-links a {
-  color: #94a3b8;
+  color: #cbd5e1 !important;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
   transition: color 0.2s;
 }
-.landing-nav-links a:hover { color: #fff; }
+.landing-nav-links a:hover { color: #ffffff !important; }
 .landing-nav-actions {
   display: flex;
   align-items: center;
@@ -165,6 +165,7 @@
   line-height: 1.1;
   letter-spacing: -2px;
   margin: 0 0 24px;
+  color: #ffffff !important;
 }
 .landing-gradient-text {
   background: linear-gradient(135deg, #10b981, #6366f1);
@@ -174,7 +175,7 @@
 }
 .landing-hero-subtitle {
   font-size: 20px;
-  color: #64748b;
+  color: #94a3b8 !important;
   max-width: 640px;
   margin: 0 auto 36px;
   line-height: 1.6;
@@ -341,9 +342,10 @@
   text-align: center;
   letter-spacing: -1.5px;
   margin: 0 0 16px;
+  color: #ffffff !important;
 }
 .landing-section-sub {
-  color: #64748b;
+  color: #94a3b8 !important;
   font-size: 18px;
   text-align: center;
   margin: 0 0 56px;
@@ -375,10 +377,11 @@
   font-size: 16px;
   font-weight: 700;
   margin: 0 0 10px;
+  color: #ffffff !important;
 }
 .landing-feature-card p {
   font-size: 14px;
-  color: #64748b;
+  color: #94a3b8 !important;
   line-height: 1.6;
   margin: 0;
 }
@@ -466,7 +469,7 @@
   color: var(--plan-color);
 }
 .landing-plan-tagline {
-  color: #64748b;
+  color: #cbd5e1 !important;
   font-size: 13px;
   margin: 0 0 20px;
 }
@@ -479,18 +482,18 @@
 .landing-plan-currency {
   font-size: 22px;
   font-weight: 700;
-  color: #94a3b8;
+  color: #cbd5e1 !important;
 }
 .landing-plan-amount {
   font-size: 48px;
   font-weight: 900;
   letter-spacing: -2px;
-  color: #fff;
+  color: #ffffff !important;
   line-height: 1;
 }
 .landing-plan-period {
   font-size: 16px;
-  color: #64748b;
+  color: #94a3b8 !important;
 }
 .landing-plan-features {
   list-style: none;
@@ -505,7 +508,7 @@
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: #94a3b8;
+  color: #e2e8f0 !important;
 }
 .landing-plan-features li span {
   color: var(--plan-color);

@@ -50,11 +50,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-y: auto;
   overflow-x: hidden;
-  /* Prevents outer browser window scrollbars completely */
   background-color: var(--bg);
   color: var(--ink);
   font-family: 'Inter', sans-serif;
@@ -66,15 +64,6 @@ body {
 }
 
 @media (max-width: 768px) {
-  html,
-  body {
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: auto;
-    min-height: 100%;
-    /* Allow vertical scrolling on mobile for content-heavy pages */
-  }
-
   .layout-container {
     height: auto;
     min-height: 100dvh;
