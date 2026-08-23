@@ -8,7 +8,7 @@ const plans = [
     id: 'starter',
     name: 'Starter',
     tagline: 'Solo Counselor Workspace',
-    monthlyPrice: 1,
+    monthlyPrice: 999,
     features: [
       '1 Counselor Seat',
       'Up to 100 Student Profiles',
@@ -22,7 +22,7 @@ const plans = [
     id: 'growth',
     name: 'Growth',
     tagline: 'Small Counseling Teams',
-    monthlyPrice: 1,
+    monthlyPrice: 2499,
     features: [
       'Up to 5 Team Seats',
       'Up to 500 Student Profiles',
@@ -38,7 +38,7 @@ const plans = [
     id: 'agency',
     name: 'Agency',
     tagline: 'Scale Admissions Pipeline',
-    monthlyPrice: 1,
+    monthlyPrice: 4999,
     features: [
       'Unlimited Counselor Seats',
       'Unlimited Student Profiles',
@@ -103,14 +103,70 @@ export default function BillingPortal() {
   const handleCheckout = async (planId) => {
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const res = await axios.post('/api/billing/checkout', {
         planId: planId,
         billingCycle: billingCycle
       }, { withCredentials: true });
-      if (res.data.url) {
-        window.location.href = res.data.url;
+      
+      const { order_id, amount, currency, key_id, company_name, plan_id, cycle, is_mock } = res.data;
+
+      if (is_mock) {
+        // Direct mock activation for development
+        await axios.post('/api/billing/verify-payment', {
+          razorpay_order_id: order_id,
+          razorpay_payment_id: 'mock_pay_' + Date.now(),
+          razorpay_signature: 'mock_sig_' + Date.now(),
+          planId: plan_id,
+          billingCycle: cycle
+        }, { withCredentials: true });
+        setSuccess('Mock plan activated successfully!');
+        await checkAuth(); // Refresh session status
+        return;
       }
+
+      // Trigger Razorpay Modal
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: "Nexus CRM",
+        description: `${plan_id.toUpperCase()} Plan Subscription`,
+        order_id: order_id,
+        handler: async function (response) {
+          try {
+            setLoading(true);
+            await axios.post('/api/billing/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId: plan_id,
+              billingCycle: cycle
+            }, { withCredentials: true });
+            setSuccess('Plan activated successfully!');
+            await checkAuth(); // Refresh session status
+          } catch (err) {
+            setError(err.response?.data?.detail || 'Payment verification failed.');
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || ''
+        },
+        theme: {
+          color: "#10b981"
+        },
+        modal: {
+          ondismiss: function () {
+            setError('Payment cancelled by user.');
+          }
+        }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to create billing session.');
     } finally {
@@ -118,18 +174,10 @@ export default function BillingPortal() {
     }
   };
 
-  const handlePortalRedirect = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await axios.post('/api/billing/portal', {}, { withCredentials: true });
-      if (res.data.url) {
-        window.location.href = res.data.url;
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to open billing portal.');
-    } finally {
-      setLoading(false);
+  const handlePortalRedirect = () => {
+    const plansSec = document.getElementById('pricing-plans-section');
+    if (plansSec) {
+      plansSec.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -163,10 +211,9 @@ export default function BillingPortal() {
             {(user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing') && (
               <button 
                 onClick={handlePortalRedirect}
-                disabled={loading}
-                className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors rounded-xl font-bold text-sm disabled:opacity-50"
+                className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors rounded-xl font-bold text-sm"
               >
-                {loading ? 'Redirecting...' : 'Open Stripe Customer Portal'}
+                Change or Upgrade Plan
               </button>
             )}
           </div>
@@ -296,7 +343,7 @@ export default function BillingPortal() {
       )}
 
       {/* Pricing cards grid */}
-      <div className="max-w-6xl mx-auto w-full space-y-12">
+      <div id="pricing-plans-section" className="max-w-6xl mx-auto w-full space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Available Subscription Tiers

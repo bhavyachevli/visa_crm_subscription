@@ -14,3 +14,5 @@ requests==2.31.0
 dnspython==2.6.1
 email-validator==2.1.1
 stripe==9.0.0
+razorpay==1.4.1
+

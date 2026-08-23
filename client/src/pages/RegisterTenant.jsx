@@ -48,15 +48,63 @@ export default function RegisterTenant() {
 
       // 3. Initiate Checkout session
       const checkRes = await axios.post('/api/billing/checkout', { planId: formData.planId || 'starter' }, { withCredentials: true });
-      
-      if (checkRes.data.url) {
-        // Redirect to Stripe checkout (or mock success URL)
-        window.location.href = checkRes.data.url;
-      } else {
-        navigate('/dashboard');
+      const { order_id, amount, currency, key_id, company_name, plan_id, cycle, is_mock } = checkRes.data;
+
+      if (is_mock) {
+        // Direct mock activation for development
+        await axios.post('/api/billing/verify-payment', {
+          razorpay_order_id: order_id,
+          razorpay_payment_id: 'mock_pay_' + Date.now(),
+          razorpay_signature: 'mock_sig_' + Date.now(),
+          planId: plan_id,
+          billingCycle: cycle
+        }, { withCredentials: true });
+        navigate('/dashboard?checkout=success');
+        return;
       }
+
+      // Trigger Razorpay Modal
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: "Nexus CRM",
+        description: `${plan_id.toUpperCase()} Plan (${cycle})`,
+        order_id: order_id,
+        handler: async function (response) {
+          try {
+            setLoading(true);
+            await axios.post('/api/billing/verify-payment', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId: plan_id,
+              billingCycle: cycle
+            }, { withCredentials: true });
+            navigate('/dashboard?checkout=success');
+          } catch (err) {
+            setError(parseErrorDetail(err.response?.data?.detail) || 'Payment verification failed.');
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: formData.name,
+          email: formData.email
+        },
+        theme: {
+          color: "#10b981"
+        },
+        modal: {
+          ondismiss: function () {
+            setError('Payment checkout cancelled. Plan is pending payment.');
+          }
+        }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      setError(parseErrorDetail(err.response?.data?.detail) || 'Registration failed. Verify password requirements (min 8 chars, 1 uppercase, 1 digit).');
+      setError(parseErrorDetail(err.response?.data?.detail) || 'Registration failed. Verify password requirements.');
     } finally {
       setLoading(false);
     }

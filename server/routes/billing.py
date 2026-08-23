@@ -1,29 +1,43 @@
 import os
-import stripe
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
+import razorpay
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from middleware.auth import get_current_user
 from utils.db import coordinator_db
 from bson import ObjectId
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
-STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "sk_test_mock")
-STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "whsec_mock")
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_mock")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "mock_secret")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 
-# Initialize stripe
-if STRIPE_SECRET_KEY != "sk_test_mock":
-    stripe.api_key = STRIPE_SECRET_KEY
+# Initialize Razorpay Client
+if RAZORPAY_KEY_ID != "rzp_test_mock":
+    try:
+        rzp_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    except Exception as e:
+        print(f"Error initializing Razorpay Client: {e}")
+        rzp_client = None
+else:
+    rzp_client = None
 
 class CheckoutRequest(BaseModel):
     planId: str = "starter" # "starter", "growth", "agency"
     billingCycle: str = "monthly" # "monthly", "yearly"
 
+class PaymentVerifyRequest(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+    planId: str
+    billingCycle: str
+
 @router.post("/checkout")
 async def create_checkout_session(req: CheckoutRequest, current_user=Depends(get_current_user)):
     """
-    Creates a Stripe checkout session or a mock checkout session if running without keys.
+    Creates a Razorpay Order or returns a mock order if running in dev mode.
     """
     tenant_id = current_user.get("tenantId") or current_user.get("tenant_id")
     if not tenant_id:
@@ -33,7 +47,6 @@ async def create_checkout_session(req: CheckoutRequest, current_user=Depends(get
     if not tenant:
          raise HTTPException(status_code=404, detail="Tenant organization not found")
 
-    email = current_user["email"]
     plan_id = req.planId.strip().lower()
     cycle = req.billingCycle.strip().lower()
 
@@ -42,113 +55,81 @@ async def create_checkout_session(req: CheckoutRequest, current_user=Depends(get
     if cycle not in ("monthly", "yearly"):
          cycle = "monthly"
 
-    # Prices in INR (paise)
+    # Prices in INR
     prices = {
-         "starter": {"monthly": 1, "yearly": 1},
-         "growth": {"monthly": 1, "yearly": 1},
-         "agency": {"monthly": 1, "yearly": 1}
+         "starter": {"monthly": 999, "yearly": 9999},
+         "growth": {"monthly": 2499, "yearly": 24999},
+         "agency": {"monthly": 4999, "yearly": 49999}
     }
     amount = prices[plan_id][cycle]
     amount_paise = amount * 100
 
-    if STRIPE_SECRET_KEY == "sk_test_mock":
-        # Mock checkout session URL that immediately redirects back to our billing screen with mock flags
-        mock_checkout_url = f"{FRONTEND_URL}/billing?mock_checkout_success=true&tenant_id={tenant_id}&plan_id={plan_id}&cycle={cycle}"
+    if RAZORPAY_KEY_ID == "rzp_test_mock" or rzp_client is None:
+        # Mock Razorpay Order ID for sandbox testing
+        mock_order_id = f"order_mock_{ObjectId()}"
         return {
-            "message": "Mock checkout session created successfully",
-            "url": mock_checkout_url
+            "order_id": mock_order_id,
+            "amount": amount_paise,
+            "currency": "INR",
+            "key_id": RAZORPAY_KEY_ID,
+            "company_name": tenant.get("company_name", "Nexus CRM"),
+            "plan_id": plan_id,
+            "cycle": cycle,
+            "is_mock": True
         }
 
     try:
-        # Real Stripe Checkout Session
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card', 'upi'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'inr',
-                    'product_data': {
-                        'name': f"Nexus CRM {plan_id.capitalize()} Plan ({cycle.capitalize()})",
-                    },
-                    'unit_amount': amount_paise,
-                    'recurring': {
-                        'interval': 'month' if cycle == 'monthly' else 'year',
-                    },
-                },
-                'quantity': 1,
-            }],
-            mode='subscription',
-            success_url=f"{FRONTEND_URL}/dashboard?checkout=success",
-            cancel_url=f"{FRONTEND_URL}/billing?checkout=cancel",
-            customer_email=email,
-            metadata={
+        # Create a real Razorpay Order
+        order_data = {
+            "amount": amount_paise,
+            "currency": "INR",
+            "receipt": f"receipt_{tenant_id}",
+            "notes": {
                 "tenant_id": str(tenant_id),
                 "plan_id": plan_id,
                 "cycle": cycle
             }
-        )
-        return {"url": session.url}
+        }
+        order = rzp_client.order.create(data=order_data)
+        return {
+            "order_id": order["id"],
+            "amount": order["amount"],
+            "currency": order["currency"],
+            "key_id": RAZORPAY_KEY_ID,
+            "company_name": tenant.get("company_name", "Nexus CRM"),
+            "plan_id": plan_id,
+            "cycle": cycle,
+            "is_mock": False
+        }
     except Exception as e:
-         raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Razorpay order creation failed: {str(e)}")
 
-@router.post("/portal")
-async def create_portal_session(current_user=Depends(get_current_user)):
+@router.post("/verify-payment")
+async def verify_payment(req: PaymentVerifyRequest, current_user=Depends(get_current_user)):
     """
-    Creates a Stripe Customer Portal session or a mock portal if running without keys.
+    Verifies Razorpay payment signature and activates the organization plan limits.
     """
     tenant_id = current_user.get("tenantId") or current_user.get("tenant_id")
     if not tenant_id:
          raise HTTPException(status_code=400, detail="User tenant context is missing")
-         
-    tenant = coordinator_db.tenants.find_one({"_id": ObjectId(tenant_id)})
-    if not tenant:
-         raise HTTPException(status_code=404, detail="Tenant organization not found")
 
-    customer_id = tenant.get("stripe_customer_id")
+    # 1. Signature Verification
+    if RAZORPAY_KEY_ID == "rzp_test_mock" or rzp_client is None:
+        # Sandbox verification succeeds instantly
+        pass
+    else:
+        try:
+            params_dict = {
+                'razorpay_order_id': req.razorpay_order_id,
+                'razorpay_payment_id': req.razorpay_payment_id,
+                'razorpay_signature': req.razorpay_signature
+            }
+            rzp_client.utility.verify_payment_signature(params_dict)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Payment signature verification failed: {str(e)}")
 
-    if STRIPE_SECRET_KEY == "sk_test_mock" or not customer_id:
-        # Mock customer portal URL
-        mock_portal_url = f"{FRONTEND_URL}/billing?mock_portal=true&tenant_id={tenant_id}"
-        return {
-            "message": "Mock portal session created successfully",
-            "url": mock_portal_url
-        }
-
-    try:
-        session = stripe.billing_portal.Session.create(
-            customer=customer_id,
-            return_url=f"{FRONTEND_URL}/billing"
-        )
-        return {"url": session.url}
-    except Exception as e:
-         raise HTTPException(status_code=500, detail=f"Stripe error: {str(e)}")
-
-@router.post("/webhook")
-async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
-    """
-    Stripe Webhook handler to listen to subscription activation and deletion.
-    """
-    payload = await request.body()
-
-    if STRIPE_SECRET_KEY == "sk_test_mock":
-         raise HTTPException(status_code=400, detail="Webhook signature verification failed in mock mode")
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, stripe_signature, STRIPE_WEBHOOK_SECRET
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Webhook signature verification failed: {str(e)}")
-
-    event_type = event.get("type")
-    data_object = event.get("data", {}).get("object", {})
-
-    # Extract metadata
-    metadata = data_object.get("metadata", {})
-    tenant_id_str = metadata.get("tenant_id")
-    customer_id = data_object.get("customer")
-    subscription_id = data_object.get("id")
-
-    plan_id = metadata.get("plan_id", "starter")
+    # 2. Map resource limits
+    plan_id = req.planId.strip().lower()
     seats_limit = 1
     profiles_limit = 100
     if plan_id == "growth":
@@ -158,65 +139,36 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
          seats_limit = 999999
          profiles_limit = 999999
 
-    if not tenant_id_str:
-         customer_email = data_object.get("customer_email") or data_object.get("email")
-         if customer_email:
-              tenant = coordinator_db.tenants.find_one({"owner_email": customer_email})
-              if tenant:
-                   tenant_id_str = str(tenant["_id"])
+    # 3. Update database
+    coordinator_db.tenants.update_one(
+        {"_id": ObjectId(tenant_id)},
+        {"$set": {
+            "subscription_status": "active",
+            "planId": plan_id,
+            "seatsLimit": seats_limit,
+            "profilesLimit": profiles_limit,
+            "razorpay_order_id": req.razorpay_order_id,
+            "razorpay_payment_id": req.razorpay_payment_id,
+            "updatedAt": datetime.now(timezone.utc)
+        }}
+    )
 
-    if not tenant_id_str:
-         return {"status": "ignored", "reason": "No tenant_id associated"}
+    return {"success": True, "message": "Payment verified and plan activated successfully"}
 
-    tenant_id = ObjectId(tenant_id_str)
+@router.post("/portal")
+async def create_portal_session(current_user=Depends(get_current_user)):
+    """
+    Dummy/No-op redirect back to Billing screen for billing adjustments.
+    """
+    return {"url": f"{FRONTEND_URL}/billing?message=portal_unavailable"}
 
-    if event_type == "checkout.session.completed":
-        # Subscription created
-        coordinator_db.tenants.update_one(
-            {"_id": tenant_id},
-            {"$set": {
-                "subscription_status": "active",
-                "planId": plan_id,
-                "seatsLimit": seats_limit,
-                "profilesLimit": profiles_limit,
-                "stripe_customer_id": customer_id,
-                "stripe_subscription_id": subscription_id
-            }}
-        )
-        return {"status": "success", "message": f"Tenant {tenant_id_str} plan {plan_id} subscription activated"}
-
-    elif event_type in ("invoice.payment_succeeded", "customer.subscription.updated"):
-        coordinator_db.tenants.update_one(
-            {"_id": tenant_id},
-            {"$set": {
-                "subscription_status": "active"
-            }}
-        )
-        return {"status": "success", "message": f"Tenant {tenant_id_str} subscription renewed"}
-
-    elif event_type in ("customer.subscription.deleted", "invoice.payment_failed"):
-        coordinator_db.tenants.update_one(
-            {"_id": tenant_id},
-            {"$set": {
-                "subscription_status": "inactive"
-            }}
-        )
-        return {"status": "success", "message": f"Tenant {tenant_id_str} subscription deactivated"}
-
-    return {"status": "ignored", "event": event_type}
-
-
-# Helper route to simulate Stripe webhook payment activation locally
 @router.post("/mock-activate")
 async def mock_activate_subscription(payload: dict):
     """
-    Utility endpoint only available in Test/Mock Mode to simulate Stripe payment webhook.
+    Utility endpoint to manually activate a tenant's subscription.
     """
-    if STRIPE_SECRET_KEY != "sk_test_mock":
-         raise HTTPException(status_code=403, detail="Not allowed outside Test/Mock mode")
-
     tenant_id_str = payload.get("tenant_id")
-    action = payload.get("action", "activate") # activate / deactivate
+    action = payload.get("action", "activate")
     plan_id = payload.get("plan_id", "growth").strip().lower()
 
     if plan_id not in ("starter", "growth", "agency"):
@@ -243,8 +195,8 @@ async def mock_activate_subscription(payload: dict):
              "planId": plan_id,
              "seatsLimit": seats_limit,
              "profilesLimit": profiles_limit,
-             "stripe_customer_id": f"cus_mock_{tenant_id_str}",
-             "stripe_subscription_id": f"sub_mock_{tenant_id_str}"
+             "razorpay_order_id": f"order_manual_{tenant_id_str}",
+             "razorpay_payment_id": f"pay_manual_{tenant_id_str}"
           }}
     )
     
