@@ -420,7 +420,7 @@ class TenantRegister(BaseModel):
     email: EmailStr
     password: str
     name: str
-    planId: Optional[str] = "starter"
+    planId: str = "starter"
 
     @field_validator("password")
     @classmethod

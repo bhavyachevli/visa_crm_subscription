@@ -23,7 +23,8 @@ export default function RegisterTenant() {
     companyName: '',
     name: '',
     email: '',
-    password: ''
+    password: '',
+    planId: 'starter'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
