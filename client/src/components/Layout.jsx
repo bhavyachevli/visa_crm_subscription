@@ -359,7 +359,8 @@ export default function Layout() {
           </div>
           <div className="layout-header-right">
             {/* Notification Bell */}
-            <div className="relative" style={{ display: 'inline-block' }}>
+            {/* Notification Bell */}
+            <div style={{ display: 'inline-block' }}>
               <button
                 onClick={() => setShowNotifDropdown(!showNotifDropdown)}
                 className="layout-collapse-toggle flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
@@ -374,75 +375,69 @@ export default function Layout() {
                 )}
               </button>
 
-              {showNotifDropdown && (
-                <>
-                  {/* Backdrop to close on outside click — mobile friendly */}
-                  <div
-                    className="fixed inset-0 z-[998]"
-                    onClick={() => setShowNotifDropdown(false)}
-                  />
-                  <div
-                    className="fixed md:absolute right-2 md:right-0 top-16 md:top-auto md:mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-1 z-[999] animate-fade-in text-slate-800 dark:text-slate-100"
-                    style={{
-                      width: 'min(340px, calc(100vw - 16px))',
-                      transformOrigin: 'top right',
-                      maxHeight: '80vh',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
-                      <span className="font-bold text-xs text-slate-900 dark:text-white">Notifications</span>
-                      <div className="flex items-center gap-2">
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={handleMarkAllRead}
-                            className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setShowNotifDropdown(false)}
-                          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg leading-none"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
+              {/* Notification Drawer Backdrop */}
+              <div
+                className={`layout-notif-overlay ${showNotifDropdown ? 'open' : ''}`}
+                onClick={() => setShowNotifDropdown(false)}
+              />
 
-                    <div className="overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800" style={{ maxHeight: '60vh' }}>
-                      {notifications.length === 0 ? (
-                        <div className="px-4 py-8 text-center text-xs text-slate-400">
-                          <Bell size={24} className="mx-auto mb-2 text-slate-300" />
-                          All caught up! No notifications.
-                        </div>
-                      ) : (
-                        notifications.slice(0, 10).map(notif => (
-                          <div
-                            key={notif._id}
-                            onClick={() => handleNotificationClick(notif)}
-                            className={`px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex flex-col space-y-0.5 ${!notif.read ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-l-2 border-emerald-500' : ''}`}
-                          >
-                            <div className="flex justify-between items-start gap-2">
-                              <span className={`text-[12px] font-bold leading-tight ${!notif.read ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
-                                {notif.title}
-                              </span>
-                              <span className="text-[10px] text-slate-400 whitespace-nowrap flex-shrink-0">
-                                {new Date(notif.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">
-                              {notif.message}
-                            </p>
-                          </div>
-                        ))
-                      )}
-                    </div>
+              {/* Slide-out Notification Drawer from Right */}
+              <div className={`layout-notif-drawer ${showNotifDropdown ? 'open' : ''}`}>
+                <div className="layout-notif-drawer-header">
+                  <span className="layout-notif-drawer-title">
+                    <Bell size={18} className="text-emerald-400" /> Notifications
+                  </span>
+                  <div className="flex items-center gap-3">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 hover:underline bg-transparent border-none cursor-pointer"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowNotifDropdown(false)}
+                      className="layout-notif-drawer-close"
+                      title="Close Panel"
+                    >
+                      ×
+                    </button>
                   </div>
-                </>
-              )}
+                </div>
+
+                <div className="layout-notif-drawer-content">
+                  {notifications.length === 0 ? (
+                    <div className="px-6 py-12 text-center text-xs text-slate-400">
+                      <Bell size={32} className="mx-auto mb-3 text-slate-600" />
+                      All caught up! No new notifications.
+                    </div>
+                  ) : (
+                    notifications.map(notif => (
+                      <div
+                        key={notif._id}
+                        onClick={() => {
+                          handleNotificationClick(notif);
+                          setShowNotifDropdown(false);
+                        }}
+                        className={`layout-notif-item ${!notif.read ? 'unread' : ''}`}
+                      >
+                        <div className="layout-notif-item-header">
+                          <span className="layout-notif-item-title">
+                            {notif.title}
+                          </span>
+                          <span className="layout-notif-item-date">
+                            {new Date(notif.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="layout-notif-item-message">
+                          {notif.message}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
 
 
