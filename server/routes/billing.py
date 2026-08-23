@@ -57,9 +57,9 @@ async def create_checkout_session(req: CheckoutRequest, current_user=Depends(get
 
     # Prices in INR
     prices = {
-         "starter": {"monthly": 1, "yearly": 1},
-         "growth": {"monthly": 1, "yearly": 1},
-         "agency": {"monthly": 1, "yearly": 1}
+         "starter": {"monthly": 999, "yearly": 9999},
+         "growth": {"monthly": 2499, "yearly": 24999},
+         "agency": {"monthly": 4999, "yearly": 49999}
     }
     amount = prices[plan_id][cycle]
     amount_paise = amount * 100
