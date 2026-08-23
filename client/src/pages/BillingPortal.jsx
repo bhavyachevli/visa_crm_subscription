@@ -8,7 +8,7 @@ const plans = [
     id: 'starter',
     name: 'Starter',
     tagline: 'Solo Counselor Workspace',
-    monthlyPrice: 999,
+    monthlyPrice: 1,
     features: [
       '1 Counselor Seat',
       'Up to 100 Student Profiles',
@@ -22,7 +22,7 @@ const plans = [
     id: 'growth',
     name: 'Growth',
     tagline: 'Small Counseling Teams',
-    monthlyPrice: 2499,
+    monthlyPrice: 1,
     features: [
       'Up to 5 Team Seats',
       'Up to 500 Student Profiles',
@@ -38,7 +38,7 @@ const plans = [
     id: 'agency',
     name: 'Agency',
     tagline: 'Scale Admissions Pipeline',
-    monthlyPrice: 4999,
+    monthlyPrice: 1,
     features: [
       'Unlimited Counselor Seats',
       'Unlimited Student Profiles',
