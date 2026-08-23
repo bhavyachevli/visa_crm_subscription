@@ -53,6 +53,7 @@ body {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
+  overflow-x: hidden;
   /* Prevents outer browser window scrollbars completely */
   background-color: var(--bg);
   color: var(--ink);
@@ -60,12 +61,28 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-@media (max-width: 768px) {
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
+@media (max-width: 768px) {
   html,
   body {
-    overflow: auto;
-    /* Fallback scroll for mobile browsers if layout exceeds screen */
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100%;
+    /* Allow vertical scrolling on mobile for content-heavy pages */
+  }
+
+  .layout-container {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .layout-main-area {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

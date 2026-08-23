@@ -305,18 +305,19 @@ export default function Layout() {
               ? 'linear-gradient(90deg,#7f1d1d,#991b1b)'
               : 'linear-gradient(90deg,#064e3b,#065f46)',
             borderBottom: trialDaysLeft <= 1 ? '1px solid #ef4444' : '1px solid #10b981',
-            padding: '10px 24px',
+            padding: '8px 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '12px',
+            flexWrap: 'wrap',
+            gap: '8px',
             fontSize: '13px',
             fontWeight: 600,
           }}>
-            <span style={{ color: trialDaysLeft <= 1 ? '#fca5a5' : '#d1fae5' }}>
+            <span style={{ color: trialDaysLeft <= 1 ? '#fca5a5' : '#d1fae5', flex: 1, minWidth: 0 }}>
               {trialDaysLeft === 0
-                ? '⚠️ Your free trial has expired! Subscribe now to keep access.'
-                : `⏳ Free trial: ${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} remaining — Explore and enjoy Nexus CRM!`
+                ? '⚠️ Trial expired! Subscribe to keep access.'
+                : `⏳ ${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left in free trial`
               }
             </span>
             <button
@@ -331,9 +332,10 @@ export default function Layout() {
                 fontSize: '12px',
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
-              Subscribe Now →
+              Subscribe →
             </button>
           </div>
         )}
