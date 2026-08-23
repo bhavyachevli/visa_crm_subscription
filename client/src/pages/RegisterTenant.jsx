@@ -47,7 +47,7 @@ export default function RegisterTenant() {
       await login(formData.email, formData.password);
 
       // 3. Initiate Checkout session
-      const checkRes = await axios.post('/api/billing/checkout', {}, { withCredentials: true });
+      const checkRes = await axios.post('/api/billing/checkout', { planId: formData.planId || 'starter' }, { withCredentials: true });
       
       if (checkRes.data.url) {
         // Redirect to Stripe checkout (or mock success URL)

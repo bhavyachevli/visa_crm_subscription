@@ -17,7 +17,7 @@ if STRIPE_SECRET_KEY != "sk_test_mock":
     stripe.api_key = STRIPE_SECRET_KEY
 
 class CheckoutRequest(BaseModel):
-    planId: str # "starter", "growth", "agency"
+    planId: str = "starter" # "starter", "growth", "agency"
     billingCycle: str = "monthly" # "monthly", "yearly"
 
 @router.post("/checkout")
