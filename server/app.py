@@ -25,6 +25,7 @@ from routes.immigration import router as immigration_router
 from routes.appointments import router as appointments_router
 from routes.billing import router as billing_router
 from routes.notifications import router as notifications_router
+from routes.whatsapp import router as whatsapp_router
 
 
 _IS_PRODUCTION = os.environ.get("ENV", "development") == "production"
@@ -97,6 +98,7 @@ app.include_router(immigration_router)
 app.include_router(appointments_router)
 app.include_router(billing_router)
 app.include_router(notifications_router)
+app.include_router(whatsapp_router)
 
 
 

@@ -9,7 +9,7 @@ Role hierarchy:
 from fastapi import APIRouter, Response, Request, HTTPException, Depends, BackgroundTasks
 from bson import ObjectId
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pyotp
 import random
 
@@ -91,13 +91,15 @@ def register_tenant(req: TenantRegister):
     # 1. Create Tenant metadata in coordinator
     tenant_id = ObjectId()
     db_name = f"nexus_tenant_{str(tenant_id)}"
+    trial_ends_at = datetime.now(timezone.utc) + timedelta(days=3)
     
     tenant_doc = {
         "_id": tenant_id,
         "company_name": req.companyName.strip(),
         "owner_email": email_clean,
         "db_name": db_name,
-        "subscription_status": "inactive",  # Starts inactive, requires payment checkout
+        "subscription_status": "trialing",  # 3-day free trial
+        "trial_ends_at": trial_ends_at,
         "planId": plan_id,
         "seatsLimit": seats_limit,
         "profilesLimit": profiles_limit,
@@ -150,9 +152,21 @@ def register_tenant(req: TenantRegister):
     finally:
         db_context.reset(token_token)
 
+    # 4. Send welcome email
+    try:
+        from utils.email_utils import send_welcome_email
+        send_welcome_email(
+            to_email=email_clean,
+            name=req.name.strip(),
+            company_name=req.companyName.strip(),
+            trial_ends_at=trial_ends_at
+        )
+    except Exception as e:
+        print(f"[WARN] Welcome email failed: {e}")
+
     return {
         "success": True,
-        "message": "Tenant registered successfully. Please proceed to payment.",
+        "message": "Tenant registered successfully. Your 3-day free trial has started!",
         "tenantId": str(tenant_id),
         "email": email_clean
     }
@@ -701,6 +715,7 @@ def get_me(current_user=Depends(get_current_user)):
     plan_id = "starter"
     seats_limit = 1
     profiles_limit = 100
+    trial_ends_at = None
     
     tenant_id_str = current_user.get("tenant_id")
     if tenant_id_str:
@@ -710,6 +725,16 @@ def get_me(current_user=Depends(get_current_user)):
             plan_id = tenant.get("planId", "starter")
             seats_limit = tenant.get("seatsLimit", 1)
             profiles_limit = tenant.get("profilesLimit", 100)
+            trial_ends_at_raw = tenant.get("trial_ends_at")
+            if trial_ends_at_raw:
+                # Auto-expire trial if time has passed
+                if subscription_status == "trialing" and datetime.now(timezone.utc) > trial_ends_at_raw:
+                    subscription_status = "inactive"
+                    coordinator_db.tenants.update_one(
+                        {"_id": ObjectId(tenant_id_str)},
+                        {"$set": {"subscription_status": "inactive"}}
+                    )
+                trial_ends_at = trial_ends_at_raw.isoformat()
             
     # Count usage in tenant database
     current_seats = db.users.count_documents({})
@@ -726,6 +751,7 @@ def get_me(current_user=Depends(get_current_user)):
         "isActive": current_user.get("isActive", True),
         "subscriptionStatus": subscription_status,
         "planId": plan_id,
+        "trialEndsAt": trial_ends_at,
         "limits": {
             "seatsLimit": seats_limit,
             "profilesLimit": profiles_limit

@@ -17,6 +17,14 @@ export default function Layout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // ── Trial countdown ─────────────────────────────────────────────────────────
+  const trialDaysLeft = React.useMemo(() => {
+    if (!user?.trialEndsAt || user?.subscriptionStatus !== 'trialing') return null;
+    const diff = new Date(user.trialEndsAt) - new Date();
+    if (diff <= 0) return 0;
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }, [user?.trialEndsAt, user?.subscriptionStatus]);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved === 'dark';
@@ -289,6 +297,46 @@ export default function Layout() {
 
       {/* ─── Main Area ───────────────────────────────────────────────────────── */}
       <div className="layout-main-area">
+
+        {/* ── Trial Banner ───────────────────────────────────────────────── */}
+        {trialDaysLeft !== null && (
+          <div style={{
+            background: trialDaysLeft <= 1
+              ? 'linear-gradient(90deg,#7f1d1d,#991b1b)'
+              : 'linear-gradient(90deg,#064e3b,#065f46)',
+            borderBottom: trialDaysLeft <= 1 ? '1px solid #ef4444' : '1px solid #10b981',
+            padding: '10px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}>
+            <span style={{ color: trialDaysLeft <= 1 ? '#fca5a5' : '#d1fae5' }}>
+              {trialDaysLeft === 0
+                ? '⚠️ Your free trial has expired! Subscribe now to keep access.'
+                : `⏳ Free trial: ${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} remaining — Explore and enjoy Nexus CRM!`
+              }
+            </span>
+            <button
+              onClick={() => navigate('/billing')}
+              style={{
+                background: trialDaysLeft <= 1 ? '#ef4444' : '#10b981',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '5px 14px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Subscribe Now →
+            </button>
+          </div>
+        )}
 
         {/* Top bar */}
         <header className="layout-header">

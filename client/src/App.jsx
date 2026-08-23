@@ -25,8 +25,8 @@ import ClientPortal from './pages/ClientPortal';
 import Tasks from './pages/Tasks';
 import HR from './pages/HR';
 import Appointments from './pages/Appointments';
+import Landing from './pages/Landing';
 
-// Replace with your real Google Client ID from .env / Google Cloud Console
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
 function App() {
@@ -36,6 +36,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<RegisterTenant />} />
 
@@ -79,7 +80,7 @@ function App() {
                   <Route path="/branches" element={<ManageBranches />} />
                 </Route>
 
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Route>
 
