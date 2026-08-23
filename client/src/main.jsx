@@ -4,11 +4,10 @@ import App from './App.jsx'
 import './index.css'
 import axios from 'axios'
 
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
+axios.defaults.baseURL = '';
 axios.defaults.withCredentials = true;
 
-console.log("API URL configured:", import.meta.env.VITE_API_URL);
-console.log("Axios Default Base URL:", axios.defaults.baseURL);
+console.log("Axios Default Base URL set to relative paths");
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
