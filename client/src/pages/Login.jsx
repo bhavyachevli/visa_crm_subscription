@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { Lock, Mail, Shield, AlertCircle, KeyRound, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
@@ -246,8 +246,11 @@ export default function Login() {
                             </button>
                         </form>
 
-                        <p className="login-footer-text mt-6">
-                            Don't have an account? <a href="#" className="login-footer-link">Contact your Director or CEO.</a>
+                        <p className="login-footer-text mt-6" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                            <span>Don't have an account? <a href="#" className="login-footer-link">Contact your Director or CEO.</a></span>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                Want to register your own business? <Link to="/register" style={{ color: '#10b981', fontWeight: 'bold', textDecoration: 'underline' }}>Create Organization Workspace</Link>
+                            </span>
                         </p>
                     </>
                 )}
