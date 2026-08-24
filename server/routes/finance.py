@@ -60,7 +60,7 @@ def create_invoice(invoice: InvoiceCreate, current_user = Depends(get_current_us
 
 @router.get("/invoices")
 def get_all_invoices(current_user = Depends(get_current_user)):
-    if current_user["role"] not in ["DIRECTOR", "ADMIN", "FINANCE"]:
+    if current_user["role"] not in ["CEO", "DIRECTOR", "ADMIN", "FINANCE"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     cursor = db.invoices.find().sort("createdAt", -1)
     invs = []

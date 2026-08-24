@@ -57,9 +57,9 @@ async def create_checkout_session(req: CheckoutRequest, current_user=Depends(get
 
     # Prices in INR
     prices = {
-         "starter": {"monthly": 999, "yearly": 9999},
-         "growth": {"monthly": 2499, "yearly": 24999},
-         "agency": {"monthly": 4999, "yearly": 49999}
+         "starter": {"monthly": 3000, "yearly": 29999},
+         "growth": {"monthly": 5000, "yearly": 49999},
+         "agency": {"monthly": 10000, "yearly": 99999}
     }
     amount = prices[plan_id][cycle]
     amount_paise = amount * 100
@@ -130,11 +130,11 @@ async def verify_payment(req: PaymentVerifyRequest, current_user=Depends(get_cur
 
     # 2. Map resource limits
     plan_id = req.planId.strip().lower()
-    seats_limit = 1
+    seats_limit = 5
     profiles_limit = 100
     if plan_id == "growth":
-         seats_limit = 5
-         profiles_limit = 500
+         seats_limit = 15
+         profiles_limit = 450
     elif plan_id == "agency":
          seats_limit = 999999
          profiles_limit = 999999
@@ -174,11 +174,11 @@ async def mock_activate_subscription(payload: dict):
     if plan_id not in ("starter", "growth", "agency"):
          plan_id = "growth"
 
-    seats_limit = 1
+    seats_limit = 5
     profiles_limit = 100
     if plan_id == "growth":
-         seats_limit = 5
-         profiles_limit = 500
+         seats_limit = 15
+         profiles_limit = 450
     elif plan_id == "agency":
          seats_limit = 999999
          profiles_limit = 999999

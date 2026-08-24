@@ -237,7 +237,7 @@ export default function Leads() {
             paginatedLeads.map((lead, idx) => (
               <div
                 key={lead._id}
-                className="grid grid-cols-1 md:grid-cols-12 px-4 py-4 transition-colors items-start md:items-center gap-3 md:gap-0 border-b border-slate-100"
+                className={`grid grid-cols-1 md:grid-cols-12 px-4 py-4 transition-colors items-start md:items-center gap-3 md:gap-0 border-b border-slate-100 relative ${openMenuId === lead._id ? 'z-50' : 'z-10'}`}
                 style={{ borderLeft: '3px solid #C084FC' }}
               >
                 {/* LEAD */}
@@ -388,7 +388,20 @@ export default function Leads() {
                         <button onClick={() => { navigate(`/leads/${lead._id}`); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 flex items-center">
                           <FileText className="w-3.5 h-3.5 mr-2 text-sky-600" /> View Details
                         </button>
-                        <button onClick={() => { navigate(`/leads/${lead._id}`); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 flex items-center">
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation();
+                            if(e.nativeEvent) e.nativeEvent.stopImmediatePropagation();
+                            const email = lead.email || (lead.emailAddresses && lead.emailAddresses.length > 0 ? lead.emailAddresses[0].emailAddress : '');
+                            if (email) {
+                              window.location.href = `mailto:${email}`;
+                            } else {
+                              alert('No email address available for this lead.');
+                            }
+                            setOpenMenuId(null); 
+                          }} 
+                          className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 flex items-center"
+                        >
                           <Mail className="w-3.5 h-3.5 mr-2 text-sky-600" /> Send Email
                         </button>
                         <button onClick={() => { setSelectedLeadId(lead._id); setFollowUpModalOpen(true); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-sky-50 flex items-center">

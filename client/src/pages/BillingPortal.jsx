@@ -7,47 +7,57 @@ const plans = [
   {
     id: 'starter',
     name: 'Starter',
-    tagline: 'Solo Counselor Workspace',
-    monthlyPrice: 999,
+    tagline: 'Perfect for Solo Consultancies',
+    monthlyPrice: 3000,
     features: [
-      '1 Counselor Seat',
+      'Up to 5 Team Seats',
       'Up to 100 Student Profiles',
-      'Basic Inquiry Forms',
-      'Email Notifications Only',
-      'Basic Metrics Dashboard'
+      'Lead & Pipeline Tracking',
+      'Follow-up Reminders',
+      'Task & Appointment Tracking',
+      'Staff Attendance Module',
+      'Basic Analytics Dashboard',
+      'Email & WhatsApp Support',
     ],
     buttonText: 'Subscribe Starter'
   },
   {
     id: 'growth',
-    name: 'Growth',
-    tagline: 'Small Counseling Teams',
-    monthlyPrice: 2499,
+    name: 'Professional',
+    tagline: 'For Growing Consultancies',
+    monthlyPrice: 5000,
     features: [
-      'Up to 5 Team Seats',
-      'Up to 500 Student Profiles',
-      'Automated Follow-up Tasks',
-      'Email + WhatsApp Alerts',
-      'Document Vault & Verification',
-      'CSV Reports & Exports'
+      'Up to 15 Team Seats',
+      'Up to 450 Student Profiles',
+      'Everything in Starter +',
+      'Multi-Branch Management',
+      'Finance & Invoice Tracking',
+      'Immigration Case Pipeline',
+      'Role-Based Access Control',
+      'Document Management',
+      'Agreement PDF Generator',
+      'Priority Support',
     ],
-    buttonText: 'Subscribe Growth',
+    buttonText: 'Subscribe Professional',
     popular: true
   },
   {
     id: 'agency',
-    name: 'Agency',
-    tagline: 'Scale Admissions Pipeline',
-    monthlyPrice: 4999,
+    name: 'Enterprise',
+    tagline: 'For Large Agencies & Chains',
+    monthlyPrice: 10000,
     features: [
-      'Unlimited Counselor Seats',
+      'Unlimited Team Seats',
       'Unlimited Student Profiles',
-      'Custom Role Permissions',
-      'Automated Workflows & Webhooks',
-      'Custom Branding / White-labeling',
-      'Priority Storage & Support'
+      'Everything in Professional +',
+      'Client Self-Service Portal',
+      'Advanced Analytics & Reports',
+      'HR & Attendance Management',
+      'Custom Branding & Logo',
+      'Dedicated Account Manager',
+      'On-Call Support & Training',
     ],
-    buttonText: 'Subscribe Agency'
+    buttonText: 'Subscribe Enterprise'
   }
 ];
 
@@ -57,7 +67,7 @@ export default function BillingPortal() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -109,7 +119,7 @@ export default function BillingPortal() {
         planId: planId,
         billingCycle: billingCycle
       }, { withCredentials: true });
-      
+
       const { order_id, amount, currency, key_id, company_name, plan_id, cycle, is_mock } = res.data;
 
       if (is_mock) {
@@ -183,7 +193,7 @@ export default function BillingPortal() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-900 dark:text-slate-100 py-12 px-4 sm:px-8 flex flex-col justify-start space-y-12 animate-fade-in">
-      
+
       {/* Upper Status Panel */}
       <div className="max-w-6xl mx-auto w-full">
         <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
@@ -197,11 +207,10 @@ export default function BillingPortal() {
               <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
                 Active Plan: <span className="text-emerald-500 uppercase">{user?.planId || 'starter'}</span>
               </span>
-              <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full uppercase tracking-wider border ${
-                user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing'
-                  ? 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 border-emerald-500/25'
-                  : 'bg-rose-500/10 text-rose-650 dark:text-rose-400 border-rose-500/25'
-              }`}>
+              <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full uppercase tracking-wider border ${user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing'
+                ? 'bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 border-emerald-500/25'
+                : 'bg-rose-500/10 text-rose-650 dark:text-rose-400 border-rose-500/25'
+                }`}>
                 {user?.subscriptionStatus || 'inactive'}
               </span>
             </div>
@@ -209,7 +218,7 @@ export default function BillingPortal() {
 
           <div>
             {(user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing') && (
-              <button 
+              <button
                 onClick={handlePortalRedirect}
                 className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white transition-colors rounded-xl font-bold text-sm"
               >
@@ -251,8 +260,8 @@ export default function BillingPortal() {
             </div>
             {user?.limits?.seatsLimit < 999999 ? (
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                <div 
-                  className="bg-emerald-500 h-full transition-all duration-500" 
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-500"
                   style={{ width: `${Math.min(100, ((user?.usage?.seatsCount || 1) / (user?.limits?.seatsLimit || 1)) * 100)}%` }}
                 />
               </div>
@@ -276,8 +285,8 @@ export default function BillingPortal() {
             </div>
             {user?.limits?.profilesLimit < 999999 ? (
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                <div 
-                  className="bg-emerald-500 h-full transition-all duration-500" 
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-500"
                   style={{ width: `${Math.min(100, ((user?.usage?.profilesCount || 0) / (user?.limits?.profilesLimit || 100)) * 100)}%` }}
                 />
               </div>
@@ -355,7 +364,7 @@ export default function BillingPortal() {
           {/* Toggle Switch */}
           <div className="pt-2 flex items-center justify-center gap-4">
             <span className={`text-xs font-semibold ${billingCycle === 'monthly' ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>Monthly Billing</span>
-            <button 
+            <button
               onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
               className="w-12 h-7 bg-slate-200 dark:bg-slate-800 rounded-full p-1 relative flex items-center transition-colors focus:outline-none"
             >
@@ -377,15 +386,14 @@ export default function BillingPortal() {
             const totalPrice = billingCycle === 'monthly' ? plan.monthlyPrice : plan.monthlyPrice * 10;
 
             return (
-              <div 
+              <div
                 key={plan.id}
-                className={`bg-white dark:bg-slate-900/40 backdrop-blur-sm border rounded-3xl p-8 flex flex-col justify-between transition-all relative ${
-                  isCurrent 
-                    ? 'border-emerald-500 shadow-xl dark:shadow-emerald-500/5 ring-1 ring-emerald-500' 
-                    : plan.popular 
-                      ? 'border-emerald-500 dark:border-emerald-400 shadow-xl dark:shadow-emerald-500/5 ring-1 ring-emerald-400 dark:ring-emerald-500'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                }`}
+                className={`bg-white dark:bg-slate-900/40 backdrop-blur-sm border rounded-3xl p-8 flex flex-col justify-between transition-all relative ${isCurrent
+                  ? 'border-emerald-500 shadow-xl dark:shadow-emerald-500/5 ring-1 ring-emerald-500'
+                  : plan.popular
+                    ? 'border-emerald-500 dark:border-emerald-400 shadow-xl dark:shadow-emerald-500/5 ring-1 ring-emerald-400 dark:ring-emerald-500'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
               >
                 {isCurrent && (
                   <span className="absolute -top-3.5 right-6 bg-emerald-600 text-white text-[9px] font-extrabold uppercase px-3 py-1 rounded-full tracking-widest shadow-md">
@@ -408,7 +416,7 @@ export default function BillingPortal() {
                     <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">₹{displayPrice.toLocaleString('en-IN')}</span>
                     <span className="text-slate-500 dark:text-slate-400 text-xs">/ month</span>
                   </div>
-                  
+
                   {billingCycle === 'yearly' && (
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md inline-block">
                       Billed annually at ₹{totalPrice.toLocaleString('en-IN')}
@@ -431,21 +439,20 @@ export default function BillingPortal() {
 
                 <div className="mt-8">
                   {isCurrent ? (
-                    <button 
+                    <button
                       disabled
                       className="w-full py-3 rounded-xl font-bold text-xs bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-center uppercase tracking-wider"
                     >
                       Active
                     </button>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => handleCheckout(plan.id)}
                       disabled={loading}
-                      className={`w-full py-3 rounded-xl font-bold text-xs transition-all focus:outline-none focus:ring-2 ${
-                        plan.popular 
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 shadow-lg dark:shadow-emerald-600/20' 
-                          : 'bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-slate-700'
-                      }`}
+                      className={`w-full py-3 rounded-xl font-bold text-xs transition-all focus:outline-none focus:ring-2 ${plan.popular
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 shadow-lg dark:shadow-emerald-600/20'
+                        : 'bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-slate-700'
+                        }`}
                     >
                       {plan.buttonText}
                     </button>

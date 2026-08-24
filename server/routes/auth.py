@@ -78,12 +78,12 @@ def register_tenant(req: TenantRegister):
     if plan_id not in ("starter", "growth", "agency"):
         plan_id = "starter"
         
-    seats_limit = 1
+    seats_limit = 5
     profiles_limit = 100
     
     if plan_id == "growth":
-        seats_limit = 5
-        profiles_limit = 500
+        seats_limit = 15
+        profiles_limit = 450
     elif plan_id == "agency":
         seats_limit = 999999
         profiles_limit = 999999
