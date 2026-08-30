@@ -2,6 +2,7 @@
 
 .layout-container {
   display: flex;
+  flex-direction: row-reverse;
   height: 100vh;
   height: 100dvh;
   background: var(--bg);
@@ -17,8 +18,8 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
   z-index: 50;
 }
@@ -80,7 +81,7 @@
   transition: all 0.2s ease;
   background: transparent;
   color: rgba(248, 250, 252, 0.55);
-  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
 }
 
 .layout-nav-link:hover {
@@ -91,7 +92,7 @@
 .layout-nav-link.active {
   background: rgba(16, 185, 129, 0.12) !important;
   color: #34d399 !important;
-  border-left: 3px solid #10b981 !important;
+  border-right: 3px solid #10b981 !important;
   font-weight: 600;
 }
 
@@ -376,7 +377,9 @@
   .layout-sidebar {
     position: fixed;
     height: 100%;
-    transform: translateX(-100%);
+    right: 0;
+    left: auto;
+    transform: translateX(100%);
     width: 250px !important; /* Force width on mobile */
   }
 
@@ -484,17 +487,18 @@
 .layout-notif-drawer {
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
+  right: auto;
   height: 100vh;
   height: 100dvh;
   width: min(380px, 100vw);
   background: #0f172a; /* Solid dark slate matching the sidebar */
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
   z-index: 999;
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
+  transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #f8fafc;
 }
