@@ -1,5 +1,5 @@
-Cases count: 5
-lead_oids: ['6a266380a1ae6a55910f87f4', '6a2680fd70fcdaa7005f9161', '6a2d14e09a2bc7519971acde', '6a2d1f249a2bc7519971aceb', '6a782eaf129658523c55fd47']
-leads_map keys: ['6a2680fd70fcdaa7005f9161', '6a2d14e09a2bc7519971acde', '6a2d1f249a2bc7519971aceb', '6a782eaf129658523c55fd47']
-leads_map contents: {'6a2680fd70fcdaa7005f9161': {'name': 'Prewell Digitech', 'leadCode': 'SURAT-0001'}, '6a2d14e09a2bc7519971acde': {'name': 'NIKUNJ PATEL', 'leadCode': 'SURAT-0002'}, '6a2d1f249a2bc7519971aceb': {'name': 'jg mg', 'leadCode': 'SURAT-0003'}, '6a782eaf129658523c55fd47': {'name': 'Bhavya Chevli', 'leadCode': 'SURAT-0005'}}
-Sample leads in DB: [{'id': '6a2680fd70fcdaa7005f9161', 'name': 'Prewell Digitech', 'first': 'Prewell', 'last': 'Digitech'}, {'id': '6a2d14e09a2bc7519971acde', 'name': 'NIKUNJ PATEL', 'first': 'NIKUNJ', 'last': 'PATEL'}, {'id': '6a2d1f249a2bc7519971aceb', 'name': 'jg mg', 'first': 'jg', 'last': 'mg'}, {'id': '6a677a0402b0d717a69079a8', 'name': 'NIKUNJ PATEL', 'first': 'NIKUNJ', 'last': 'PATEL'}, {'id': '6a7816ba129658523c55fd46', 'name': 'Bhavya Chevli', 'first': 'Bhavya', 'last': 'Chevli'}]
+Cases count: 0
+lead_oids: []
+leads_map keys: []
+leads_map contents: {}
+Sample leads in DB: [{'id': '6a8a96508cf4f4f36aa298e8', 'name': 'Bhavya Chevli', 'first': 'Bhavya', 'last': 'Chevli'}, {'id': '6a8d2e6bb4bf50f0b67e2c46', 'name': 'Bhavya Chevli', 'first': 'Bhavya', 'last': 'Chevli'}]
